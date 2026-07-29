@@ -23,12 +23,25 @@ so higher = newer) containing:
 
 Comparison pages are skipped on the very first run. To delete a run, delete its folder.
 Pages show sysinfo (kernel, cmdline, governor) as a table — in comparisons, fields that
-differ between the two runs are highlighted.
+differ between the two runs are highlighted. A benchmark dropdown filters the table to a
+single testcase.
+
+`./kbench.py run <name...>` runs a subset (e.g. `./kbench.py run net syscall`).
+Benchmarks whose tool is missing are skipped and listed in the report; `./setup.sh`
+installs all dependencies. `rtla` needs root — use `sudo ./kbench.py run` to include it.
 
 ## Benchmarks
 
-| name     | measures                                                              |
-|----------|-----------------------------------------------------------------------|
-| fio      | block I/O: 4k randread/randwrite IOPS, 1M seqread/seqwrite throughput |
-| schbench | scheduler wakeup latency p50/p99/p99.9                                |
+| name       | needs       | measures                                                                 |
+|------------|-------------|--------------------------------------------------------------------------|
+| fio        | fio         | block I/O: 4k rand r/w IOPS + p99 lat, 1M seq throughput, 4k fsync write |
+| schbench   | schbench    | scheduler wakeup latency p50/p99/p99.9, avg rps                          |
+| rtla       | rtla (root) | timer IRQ/thread wakeup latency (timerlat)                               |
+| memory     | sysbench    | memory bandwidth, read/write MiB/s                                       |
+| net        | iperf3      | loopback TCP Gbps (plain + zero-copy), 64B UDP pps (1 + N streams)       |
+| syscall    | perf        | syscall entry/exit overhead                                              |
+| perf-sched | perf        | context-switch cost (sched pipe)                                         |
+| ipc        | perf        | scheduler+IPC throughput (hackbench-style)                               |
+| pagefault  | stress-ng   | page-fault rate                                                          |
+| fork       | stress-ng   | fork/exec rate                                                           |
 
