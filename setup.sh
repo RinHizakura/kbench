@@ -18,5 +18,3 @@ else
 fi
 
 echo "setup done:"
-fio --version
-schbench --help
