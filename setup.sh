@@ -1,8 +1,9 @@
 #!/bin/sh -e
-# Install kbench dependencies: fio (apt) and schbench (built from source).
+# Install kbench dependencies: fio/sysbench/rtla (apt) and schbench (built from source).
 
 sudo apt-get update
-sudo apt-get install -y fio build-essential git
+sudo apt-get install -y fio sysbench iperf3 build-essential git
+sudo apt-get install -y rtla || echo "no rtla package; try linux-tools-$(uname -r)"
 
 if command -v schbench >/dev/null; then
     echo "schbench already installed"

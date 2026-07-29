@@ -30,6 +30,7 @@ def bench_fio():
         ("randwrite-4k", ["--rw=randwrite", "--bs=4k", "--iodepth=32"]),
         ("seqread-1m",   ["--rw=read",      "--bs=1m", "--iodepth=8"]),
         ("seqwrite-1m",  ["--rw=write",     "--bs=1m", "--iodepth=8"]),
+        ("syncwrite-4k", ["--rw=randwrite", "--bs=4k", "--iodepth=1", "--fsync=1"]),
     ]
     for name, extra in jobs:
         r = run(["fio", "--name", name, f"--filename={testfile}", "--size=1g",
@@ -61,9 +62,64 @@ def bench_schbench():
         out["avg_rps"] = {"value": float(rps.group(1)), "better": "higher"}
     return out
 
+def bench_rtla():
+    """Timer IRQ/thread wakeup latency via rtla timerlat. Metrics: avg/max (usec). Needs root."""
+    r = run(["rtla", "timerlat", "top", "-d", "30", "-q"])
+    if r.returncode:
+        raise RuntimeError((r.stderr.strip() or "rtla failed") + " (needs root?)")
+    irq_max, thr_max, thr_avgs = 0.0, 0.0, []
+    for line in r.stdout.splitlines():
+        parts = line.split("|")
+        if len(parts) == 3 and re.match(r"\s*\d+\s+#", parts[0]):  # per-CPU rows only
+            irq = [float(x) for x in parts[1].split()]
+            thr = [float(x) for x in parts[2].split()]
+            irq_max = max(irq_max, irq[-1])
+            thr_max = max(thr_max, thr[-1])
+            thr_avgs.append(thr[-2])
+    if not thr_avgs:
+        raise RuntimeError("could not parse rtla output")
+    return {
+        "irq_max_us":    {"value": irq_max, "better": "lower"},
+        "thread_avg_us": {"value": round(sum(thr_avgs) / len(thr_avgs), 1), "better": "lower"},
+        "thread_max_us": {"value": thr_max, "better": "lower"},
+    }
+
+def bench_memory():
+    """Memory bandwidth via sysbench (1M blocks). Metrics: MiB/s read/write."""
+    out = {}
+    for op in ("read", "write"):
+        r = run(["sysbench", "memory", "--memory-block-size=1M",
+                 "--memory-total-size=20G", f"--memory-oper={op}", "run"])
+        m = re.search(r"\(([\d.]+) MiB/sec\)", r.stdout)
+        if not m:
+            raise RuntimeError(f"could not parse sysbench {op} output")
+        out[f"{op}.bw_mibps"] = {"value": float(m.group(1)), "better": "higher"}
+    return out
+
+def bench_net():
+    """Kernel net stack over loopback via iperf3. Metrics: TCP Gbps, 64B-UDP pps."""
+    out = {}
+    for name, extra, metric in [
+        ("tcp",     [],                            lambda e: ("bw_gbps", round(e["sum_received"]["bits_per_second"] / 1e9, 2))),
+        ("udp-64b", ["-u", "-b", "0", "-l", "64"], lambda e: ("pps", round(e["sum"]["packets"] / e["sum"]["seconds"]))),
+    ]:
+        srv = subprocess.Popen(["iperf3", "-s", "-1", "-p", "5210"],
+                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        time.sleep(0.3)  # let server bind
+        r = run(["iperf3", "-c", "127.0.0.1", "-p", "5210", "-t", "10", "-J"] + extra)
+        srv.wait()
+        if r.returncode:
+            raise RuntimeError(r.stderr.strip() or "iperf3 failed")
+        k, v = metric(json.loads(r.stdout)["end"])
+        out[f"{name}.{k}"] = {"value": v, "better": "higher"}
+    return out
+
 BENCHMARKS = {
     "fio":      {"needs": "fio",      "fn": bench_fio},
     "schbench": {"needs": "schbench", "fn": bench_schbench},
+    "rtla":     {"needs": "rtla",     "fn": bench_rtla},
+    "memory":   {"needs": "sysbench", "fn": bench_memory},
+    "net":      {"needs": "iperf3",   "fn": bench_net},
 }
 
 # ---------------------------------------------------------------- sysinfo
