@@ -2,9 +2,6 @@
 """kbench — kernel regression benchmark runner.
 
     ./kbench.py run [bench...] [--output DIR]
-        # run all (or the named) benchmarks -> <DIR or runs>/<kernel>_nN/
-        # containing result.json, index.html, vs_baseline.html, vs_prev.html
-        # (delete a run by deleting its folder)
 """
 import json, os, re, shutil, subprocess, sys, time
 from datetime import datetime
@@ -12,7 +9,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 RUNS = ROOT / "runs"
-REGRESSION_PCT = 5.0  # flag if worse than baseline by this much
 
 # ---------------------------------------------------------------- runners
 
@@ -174,27 +170,20 @@ def cmd_run(only=None):
     rundir.mkdir(parents=True)
     (rundir / "result.json").write_text(json.dumps(result, indent=2))
     print(f"\nsaved {rundir}/result.json")
-    gen_html(rundir.name)
+    write_report()
     return result
 
-# --- html ---
+# --- report ---
 
-def gen_html(cur):
+def write_report():
     data = {f.parent.name: json.loads(f.read_text()) for f in RUNS.glob("*/result.json")}
-    runs = sorted(data, key=lambda r: data[r]["sysinfo"]["date"])  # chronological
-    tmpl = ((ROOT / "template.html").read_text()
-            .replace("__DATA__", json.dumps(data))
-            .replace("__THRESHOLD__", str(REGRESSION_PCT)))
-
-    def emit(name, base):
-        (RUNS / cur / name).write_text(tmpl.replace("__INIT__", json.dumps({"cur": cur, "base": base})))
-        print(f"wrote {RUNS.name}/{cur}/{name}")
-
-    emit("index.html", "")
-    i = runs.index(cur)
-    if i > 0:
-        emit("vs_baseline.html", runs[0])  # ponytail: baseline = oldest run
-        emit("vs_prev.html", runs[i - 1])
+    (RUNS / "data.json").write_text(json.dumps(data))
+    print(f"wrote {RUNS.name}/data.json")
+    pf = ROOT / "platforms.json"
+    plats = json.loads(pf.read_text()) if pf.exists() else []
+    if RUNS.name not in plats:
+        pf.write_text(json.dumps(sorted(plats + [RUNS.name])))
+        print("updated platforms.json")
 
 if __name__ == "__main__":
     args = sys.argv[1:]

@@ -20,23 +20,35 @@
 </style>
 <h1>kbench report</h1>
 <p>
+  <label>platform <select id="plat"></select></label>
   <label>result <select id="cur"></select></label>
   <label>compare with <select id="base"></select></label>
   <label>benchmark <select id="bench"></select></label>
 </p>
 <div id="sys"></div>
 <div id="out"></div>
-<script>
-const DATA = __DATA__;
-const THRESHOLD = __THRESHOLD__;
-const INIT = __INIT__;  // {cur: name, base: name or ""}
-const names = Object.keys(DATA).sort((a, b) => DATA[b].sysinfo.date.localeCompare(DATA[a].sysinfo.date));  // newest first
+<script type="module">
+const THRESHOLD = 5;  // flag as regression if worse than baseline by this %
+const q = new URLSearchParams(location.search);  // ?platform=<dir>&cur=<run>&base=<run> deep-links a comparison
 const $ = id => document.getElementById(id);
+// at the repo root a platforms.json lists the --output dirs; inside one of those
+// dirs it 404s and we read the local data.json directly (no platform selector)
+const platforms = await fetch("platforms.json").then(r => r.ok ? r.json() : null).catch(() => null);
+const plat = platforms ? (q.get("platform") ?? platforms[0]) : null;
+if (platforms) {
+  for (const p of platforms) $("plat").add(new Option(p, p));
+  $("plat").value = plat;
+  $("plat").onchange = () => location.search = "?platform=" + encodeURIComponent($("plat").value);
+} else {
+  $("plat").closest("label").style.display = "none";
+}
+const DATA = await (await fetch(plat ? `${plat}/data.json` : "data.json")).json();
+const names = Object.keys(DATA).sort((a, b) => DATA[b].sysinfo.date.localeCompare(DATA[a].sysinfo.date));  // newest first
 for (const n of names) $("cur").add(new Option(n, n));
 $("base").add(new Option("— none —", ""));
 for (const n of names) $("base").add(new Option(n, n));
-if (INIT.cur) $("cur").value = INIT.cur;
-$("base").value = INIT.base || "";
+if (q.get("cur")) $("cur").value = q.get("cur");
+$("base").value = q.get("base") ?? names[1] ?? "";  // default: newest vs previous
 $("bench").add(new Option("— all —", ""));
 for (const b of [...new Set(names.flatMap(n => Object.keys(DATA[n].benchmarks)))].sort())
   $("bench").add(new Option(b, b));
