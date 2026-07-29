@@ -22,6 +22,7 @@
 <p>
   <label>result <select id="cur"></select></label>
   <label>compare with <select id="base"></select></label>
+  <label>benchmark <select id="bench"></select></label>
 </p>
 <div id="sys"></div>
 <div id="out"></div>
@@ -36,6 +37,9 @@ $("base").add(new Option("— none —", ""));
 for (const n of names) $("base").add(new Option(n, n));
 if (INIT.cur) $("cur").value = INIT.cur;
 $("base").value = INIT.base || "";
+$("bench").add(new Option("— all —", ""));
+for (const b of [...new Set(names.flatMap(n => Object.keys(DATA[n].benchmarks)))].sort())
+  $("bench").add(new Option(b, b));
 
 function metrics(r) {
   const out = [];
@@ -65,6 +69,7 @@ function render() {
   $("sys").innerHTML = sysTable(cur, base);
   let rows = "";
   for (const [bench, metric, m] of metrics(cur)) {
+    if ($("bench").value && bench !== $("bench").value) continue;
     const bm = base?.benchmarks[bench]?.[metric];
     let cells = `<td class="num">${m.value}</td>`;
     if (base) {
@@ -89,6 +94,6 @@ function render() {
     .map(([n, why]) => `<p class="sys">skipped ${n}: ${why}</p>`).join("");
   $("out").innerHTML = `<table>${head}${rows}</table>${skipped}`;
 }
-$("cur").onchange = $("base").onchange = render;
+$("cur").onchange = $("base").onchange = $("bench").onchange = render;
 render();
 </script>
