@@ -121,12 +121,46 @@ def bench_net():
         out[f"{name}.{k}"] = {"value": v, "better": "higher"}
     return out
 
-BENCHMARKS = {
-    "fio":      {"needs": "fio",      "fn": bench_fio},
-    "schbench": {"needs": "schbench", "fn": bench_schbench},
-    "rtla":     {"needs": "rtla",     "fn": bench_rtla},
-    "memory":   {"needs": "sysbench", "fn": bench_memory},
-    "net":      {"needs": "iperf3",   "fn": bench_net},
+def _perf(*args):
+    """Run perf bench, return its text output."""
+    r = run(["perf", "bench", *args])
+    if r.returncode:  # ubuntu wrapper exists but real perf may be missing for this kernel
+        raise RuntimeError(r.stderr.strip().splitlines()[0] if r.stderr.strip() else "perf failed")
+    return r.stdout + r.stderr
+
+def _perf_usecs(*args):
+    m = re.search(r"([\d.]+) usecs/op", _perf(*args))
+    if not m:
+        raise RuntimeError(f"could not parse perf bench {' '.join(args)}")
+    return {"usecs_op": {"value": float(m.group(1)), "better": "lower"}}
+
+def bench_ipc():
+    """Scheduler+IPC throughput, hackbench-style (perf bench sched messaging)."""
+    m = re.search(r"Total time:\s+([\d.]+)", _perf("sched", "messaging", "-g", "10", "-l", "1000"))
+    if not m:
+        raise RuntimeError("could not parse perf bench messaging")
+    return {"total_s": {"value": float(m.group(1)), "better": "lower"}}
+
+def _stressng(stressor):
+    """bogo ops/s (real time) for one stress-ng stressor, N workers x 15s."""
+    r = run(["stress-ng", f"--{stressor}", str(os.cpu_count() or 4), "-t", "15", "--metrics-brief"])
+    m = re.search(rf"{stressor}\s+\d+\s+[\d.]+\s+[\d.]+\s+[\d.]+\s+([\d.]+)",
+                  r.stdout + r.stderr)  # 5th col = bogo ops/s (real time)
+    if not m:
+        raise RuntimeError(f"could not parse stress-ng {stressor}")
+    return {"bogo_ops_s": {"value": float(m.group(1)), "better": "higher"}}
+
+BENCHMARKS = {  # keyed by kernel component under test, not by tool
+    "fio":        {"needs": "fio",       "fn": bench_fio},
+    "schbench":   {"needs": "schbench",  "fn": bench_schbench},
+    "rtla":       {"needs": "rtla",      "fn": bench_rtla},
+    "memory":     {"needs": "sysbench",  "fn": bench_memory},
+    "net":        {"needs": "iperf3",    "fn": bench_net},
+    "syscall":    {"needs": "perf",      "fn": lambda: _perf_usecs("syscall", "basic")},
+    "perf-sched": {"needs": "perf",      "fn": lambda: _perf_usecs("sched", "pipe")},
+    "ipc":        {"needs": "perf",      "fn": bench_ipc},
+    "pagefault":  {"needs": "stress-ng", "fn": lambda: _stressng("fault")},
+    "fork":       {"needs": "stress-ng", "fn": lambda: _stressng("fork")},
 }
 
 # ---------------------------------------------------------------- sysinfo
