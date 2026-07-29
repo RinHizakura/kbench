@@ -31,18 +31,12 @@
 const THRESHOLD = 5;  // flag as regression if worse than baseline by this %
 const q = new URLSearchParams(location.search);  // ?platform=<dir>&cur=<run>&base=<run> deep-links a comparison
 const $ = id => document.getElementById(id);
-// at the repo root a platforms.json lists the --output dirs; inside one of those
-// dirs it 404s and we read the local data.json directly (no platform selector)
-const platforms = await fetch("platforms.json").then(r => r.ok ? r.json() : null).catch(() => null);
-const plat = platforms ? (q.get("platform") ?? platforms[0]) : null;
-if (platforms) {
-  for (const p of platforms) $("plat").add(new Option(p, p));
-  $("plat").value = plat;
-  $("plat").onchange = () => location.search = "?platform=" + encodeURIComponent($("plat").value);
-} else {
-  $("plat").closest("label").style.display = "none";
-}
-const DATA = await (await fetch(plat ? `${plat}/data.json` : "data.json")).json();
+const platforms = await (await fetch("data/platforms.json")).json();
+const plat = q.get("platform") ?? platforms[0];
+for (const p of platforms) $("plat").add(new Option(p, p));
+$("plat").value = plat;
+$("plat").onchange = () => location.search = "?platform=" + encodeURIComponent($("plat").value);
+const DATA = await (await fetch(`data/${plat}.json`)).json();
 const names = Object.keys(DATA).sort((a, b) => DATA[b].sysinfo.date.localeCompare(DATA[a].sysinfo.date));  // newest first
 for (const n of names) $("cur").add(new Option(n, n));
 $("base").add(new Option("— none —", ""));

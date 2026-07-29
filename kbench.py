@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 """kbench — kernel regression benchmark runner.
 
-    ./kbench.py run [bench...] [--output DIR]
+    ./kbench.py run [bench...] [--output PLATFORM]   # append a run to data/PLATFORM.json
+    ./kbench.py list [--output PLATFORM]             # list saved runs
+    ./kbench.py rm <run> [--output PLATFORM]         # delete one run
 """
 import json, os, re, shutil, subprocess, sys, time
 from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-RUNS = ROOT / "runs"
+PREFIX = "runs"  # --output overrides; data lands in data/<PREFIX>.json
 
 # ---------------------------------------------------------------- runners
 
@@ -146,7 +148,19 @@ def sysinfo():
             pass
     return info
 
-# --- run ---
+# --- storage: one json per platform under data/, keyed by run name ---
+
+def data_path():
+    return ROOT / "data" / f"{PREFIX}.json"
+
+def load_data():
+    return json.loads(data_path().read_text()) if data_path().exists() else {}
+
+def save_data(data):
+    data_path().parent.mkdir(exist_ok=True)
+    data_path().write_text(json.dumps(data, indent=2))  # indented: meant to be hand-editable
+
+# --- commands ---
 
 def cmd_run(only=None):
     result = {"sysinfo": sysinfo(), "benchmarks": {}, "skipped": {}}
@@ -165,36 +179,38 @@ def cmd_run(only=None):
         except Exception as e:
             result["skipped"][name] = str(e)
             print(f"FAIL {name}: {e}")
-    nums = [int(m.group(1)) for d in RUNS.glob("*") if (m := re.search(r"_n(\d+)$", d.name))]
-    rundir = RUNS / f"{result['sysinfo']['kernel']}_n{max(nums, default=0) + 1}"
-    rundir.mkdir(parents=True)
-    (rundir / "result.json").write_text(json.dumps(result, indent=2))
-    print(f"\nsaved {rundir}/result.json")
-    write_report()
-    return result
-
-# --- report ---
-
-def write_report():
-    data = {f.parent.name: json.loads(f.read_text()) for f in RUNS.glob("*/result.json")}
-    (RUNS / "data.json").write_text(json.dumps(data))
-    print(f"wrote {RUNS.name}/data.json")
-    pf = ROOT / "platforms.json"
+    data = load_data()
+    nums = [int(m.group(1)) for k in data if (m := re.search(r"_n(\d+)$", k))]
+    run_name = f"{result['sysinfo']['kernel']}_n{max(nums, default=0) + 1}"
+    data[run_name] = result
+    save_data(data)
+    print(f"\nsaved {run_name} in {data_path().relative_to(ROOT)}")
+    pf = data_path().parent / "platforms.json"
     plats = json.loads(pf.read_text()) if pf.exists() else []
-    if RUNS.name not in plats:
-        pf.write_text(json.dumps(sorted(plats + [RUNS.name])))
+    if PREFIX not in plats:
+        pf.write_text(json.dumps(sorted(plats + [PREFIX])))
         print("updated platforms.json")
+    return result
 
 if __name__ == "__main__":
     args = sys.argv[1:]
+    if "--output" in args:
+        i = args.index("--output")
+        if i + 1 >= len(args):
+            sys.exit("--output needs a value")
+        PREFIX = args[i + 1]
+        del args[i:i + 2]
     if not args or args[0] == "run":
-        rest = args[1:]
-        if "--output" in rest:
-            i = rest.index("--output")
-            if i + 1 >= len(rest):
-                sys.exit("--output needs a value")
-            RUNS = ROOT / rest[i + 1]
-            del rest[i:i + 2]
-        cmd_run(only=rest or None)
+        cmd_run(only=args[1:] or None)
+    elif args[0] == "list":
+        for run_name, r in sorted(load_data().items(), key=lambda kv: kv[1]["sysinfo"]["date"]):
+            print(run_name, r["sysinfo"]["date"])
+    elif args[0] == "rm" and len(args) == 2:
+        data = load_data()
+        if args[1] not in data:
+            sys.exit(f"no run '{args[1]}' in {data_path().name} (see: kbench.py list)")
+        del data[args[1]]
+        save_data(data)
+        print(f"removed {args[1]} from {data_path().name}")
     else:
         sys.exit(__doc__)

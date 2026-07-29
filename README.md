@@ -7,7 +7,10 @@ Latest report: <https://rinhizakura.github.io/kbench/>
 ## Usage
 
 ```sh
-./kbench.py run
+./kbench.py run                  # all benchmarks -> data/runs.json
+./kbench.py run --output rpi4    # per-platform result set -> data/rpi4.json
+./kbench.py list --output rpi4   # list saved runs
+./kbench.py rm <run> --output rpi4
 ```
 
 ## Benchmarks
