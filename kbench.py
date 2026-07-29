@@ -1,13 +1,4 @@
 #!/usr/bin/env python3
-"""kbench — kernel regression benchmark runner.
-
-    ./kbench.py run    # run all available benchmarks -> runs/<kernel>_nN/ containing
-                       # result.json, index.html, vs_baseline.html, vs_prev.html
-                       # (delete a run by deleting its folder)
-
-Add a benchmark: one entry in BENCHMARKS. Metric convention:
-"higher" metrics are throughput-like, "lower" are latency-like.
-"""
 import json, os, re, shutil, subprocess, sys, time
 from datetime import datetime
 from pathlib import Path
@@ -150,7 +141,7 @@ def _stressng(stressor):
         raise RuntimeError(f"could not parse stress-ng {stressor}")
     return {"bogo_ops_s": {"value": float(m.group(1)), "better": "higher"}}
 
-BENCHMARKS = {  # keyed by kernel component under test, not by tool
+BENCHMARKS = {
     "fio":        {"needs": "fio",       "fn": bench_fio},
     "schbench":   {"needs": "schbench",  "fn": bench_schbench},
     "rtla":       {"needs": "rtla",      "fn": bench_rtla},
@@ -163,7 +154,7 @@ BENCHMARKS = {  # keyed by kernel component under test, not by tool
     "fork":       {"needs": "stress-ng", "fn": lambda: _stressng("fork")},
 }
 
-# ---------------------------------------------------------------- sysinfo
+# --- sysinfo ---
 
 def sysinfo():
     info = {"kernel": os.uname().release, "date": datetime.now().isoformat(timespec="seconds")}
@@ -175,7 +166,7 @@ def sysinfo():
             pass
     return info
 
-# ---------------------------------------------------------------- run
+# --- run ---
 
 def cmd_run(only=None):
     result = {"sysinfo": sysinfo(), "benchmarks": {}, "skipped": {}}
@@ -202,7 +193,7 @@ def cmd_run(only=None):
     gen_html(rundir.name)
     return result
 
-# ---------------------------------------------------------------- html
+# --- html ---
 
 def gen_html(cur):
     data = {f.parent.name: json.loads(f.read_text()) for f in RUNS.glob("*/result.json")}
