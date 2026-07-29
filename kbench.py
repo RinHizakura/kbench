@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """kbench — kernel regression benchmark runner.
 
-    ./kbench.py run    # run all available benchmarks -> runs/<kernel>_#N/ containing
+    ./kbench.py run    # run all available benchmarks -> runs/<kernel>_nN/ containing
                        # result.json, index.html, vs_baseline.html, vs_prev.html
                        # (delete a run by deleting its folder)
 
@@ -97,8 +97,8 @@ def cmd_run(only=None):
         except Exception as e:
             result["skipped"][name] = str(e)
             print(f"FAIL {name}: {e}")
-    nums = [int(m.group(1)) for d in RUNS.glob("*") if (m := re.search(r"#(\d+)$", d.name))]
-    rundir = RUNS / f"{result['sysinfo']['kernel']}_#{max(nums, default=0) + 1}"
+    nums = [int(m.group(1)) for d in RUNS.glob("*") if (m := re.search(r"_n(\d+)$", d.name))]
+    rundir = RUNS / f"{result['sysinfo']['kernel']}_n{max(nums, default=0) + 1}"
     rundir.mkdir(parents=True)
     (rundir / "result.json").write_text(json.dumps(result, indent=2))
     print(f"\nsaved {rundir}/result.json")

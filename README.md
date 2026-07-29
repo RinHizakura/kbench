@@ -13,7 +13,7 @@ generates a static `index.html` to view or compare them — anything >5% worse i
 ./kbench.py run
 ```
 
-Every run creates its own folder `runs/<kernel>_#N/` (N = highest existing number + 1,
+Every run creates its own folder `runs/<kernel>_nN/` (N = highest existing number + 1,
 so higher = newer) containing:
 
 - `result.json` — raw metrics + sysinfo
