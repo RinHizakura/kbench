@@ -97,11 +97,18 @@ def bench_memory():
     return out
 
 def bench_net():
-    """Kernel net stack over loopback via iperf3. Metrics: TCP Gbps, 64B-UDP pps."""
+    """Kernel net stack over loopback via iperf3.
+    Metrics: TCP Gbps (plain + zero-copy), 64B-UDP pps (1 + N streams)."""
+    bw = lambda e: ("bw_gbps", round(e["sum_received"]["bits_per_second"] / 1e9, 2))
+    pps = lambda e: ("pps", round(e["sum"]["packets"] / e["sum"]["seconds"]))
+    udp = ["-u", "-b", "0", "-l", "64"]
+    nstreams = str(os.cpu_count() or 4)
     out = {}
     for name, extra, metric in [
-        ("tcp",     [],                            lambda e: ("bw_gbps", round(e["sum_received"]["bits_per_second"] / 1e9, 2))),
-        ("udp-64b", ["-u", "-b", "0", "-l", "64"], lambda e: ("pps", round(e["sum"]["packets"] / e["sum"]["seconds"]))),
+        ("tcp",           [],                      bw),
+        ("tcp-zc",        ["-Z"],                  bw),   # zero-copy (sendfile) send path
+        ("udp-64b",       udp,                     pps),
+        ("udp-64b-multi", udp + ["-P", nstreams],  pps),
     ]:
         srv = subprocess.Popen(["iperf3", "-s", "-1", "-p", "5210"],
                                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
