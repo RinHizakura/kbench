@@ -26,7 +26,9 @@ Pages show sysinfo (kernel, cmdline, governor) as a table — in comparisons, fi
 differ between the two runs are highlighted. A benchmark dropdown filters the table to a
 single testcase.
 
-`./kbench.py run <name...>` runs a subset (e.g. `./kbench.py run net syscall`).
+`./kbench.py run <bench...>` runs a subset (e.g. `./kbench.py run net syscall`), and
+`--output DIR` stores results under `DIR/` instead of `runs/` (a separate result set with
+its own history and baseline).
 Benchmarks whose tool is missing are skipped and listed in the report; `./setup.sh`
 installs all dependencies. `rtla` needs root — use `sudo ./kbench.py run` to include it.
 

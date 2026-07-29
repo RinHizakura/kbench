@@ -1,4 +1,11 @@
 #!/usr/bin/env python3
+"""kbench — kernel regression benchmark runner.
+
+    ./kbench.py run [bench...] [--output DIR]
+        # run all (or the named) benchmarks -> <DIR or runs>/<kernel>_nN/
+        # containing result.json, index.html, vs_baseline.html, vs_prev.html
+        # (delete a run by deleting its folder)
+"""
 import json, os, re, shutil, subprocess, sys, time
 from datetime import datetime
 from pathlib import Path
@@ -204,7 +211,7 @@ def gen_html(cur):
 
     def emit(name, base):
         (RUNS / cur / name).write_text(tmpl.replace("__INIT__", json.dumps({"cur": cur, "base": base})))
-        print(f"wrote runs/{cur}/{name}")
+        print(f"wrote {RUNS.name}/{cur}/{name}")
 
     emit("index.html", "")
     i = runs.index(cur)
@@ -215,6 +222,13 @@ def gen_html(cur):
 if __name__ == "__main__":
     args = sys.argv[1:]
     if not args or args[0] == "run":
-        cmd_run(only=args[1:] or None)
+        rest = args[1:]
+        if "--output" in rest:
+            i = rest.index("--output")
+            if i + 1 >= len(rest):
+                sys.exit("--output needs a value")
+            RUNS = ROOT / rest[i + 1]
+            del rest[i:i + 2]
+        cmd_run(only=rest or None)
     else:
         sys.exit(__doc__)
