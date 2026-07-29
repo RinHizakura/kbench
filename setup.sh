@@ -1,9 +1,8 @@
 #!/bin/sh -e
-# Install kbench dependencies: fio/sysbench/rtla (apt) and schbench (built from source).
+# Install kbench dependencies: fio/sysbench (apt) and schbench (built from source).
 
 sudo apt-get update
 sudo apt-get install -y fio sysbench iperf3 stress-ng build-essential git
-sudo apt-get install -y rtla || echo "no rtla package; try linux-tools-$(uname -r)"
 sudo apt-get install -y linux-tools-common "linux-tools-$(uname -r)" \
     || echo "no linux-tools for this kernel; perf bench will be skipped"
 

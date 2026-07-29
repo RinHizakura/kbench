@@ -60,28 +60,6 @@ def bench_schbench():
         out["avg_rps"] = {"value": float(rps.group(1)), "better": "higher"}
     return out
 
-def bench_rtla():
-    """Timer IRQ/thread wakeup latency via rtla timerlat. Metrics: avg/max (usec). Needs root."""
-    r = run(["rtla", "timerlat", "top", "-d", "30", "-q"])
-    if r.returncode:
-        raise RuntimeError((r.stderr.strip() or "rtla failed") + " (needs root?)")
-    irq_max, thr_max, thr_avgs = 0.0, 0.0, []
-    for line in r.stdout.splitlines():
-        parts = line.split("|")
-        if len(parts) == 3 and re.match(r"\s*\d+\s+#", parts[0]):  # per-CPU rows only
-            irq = [float(x) for x in parts[1].split()]
-            thr = [float(x) for x in parts[2].split()]
-            irq_max = max(irq_max, irq[-1])
-            thr_max = max(thr_max, thr[-1])
-            thr_avgs.append(thr[-2])
-    if not thr_avgs:
-        raise RuntimeError("could not parse rtla output")
-    return {
-        "irq_max_us":    {"value": irq_max, "better": "lower"},
-        "thread_avg_us": {"value": round(sum(thr_avgs) / len(thr_avgs), 1), "better": "lower"},
-        "thread_max_us": {"value": thr_max, "better": "lower"},
-    }
-
 def bench_memory():
     """Memory bandwidth via sysbench (1M blocks). Metrics: MiB/s read/write."""
     out = {}
@@ -151,7 +129,6 @@ def _stressng(stressor):
 BENCHMARKS = {
     "fio":        {"needs": "fio",       "fn": bench_fio},
     "schbench":   {"needs": "schbench",  "fn": bench_schbench},
-    "rtla":       {"needs": "rtla",      "fn": bench_rtla},
     "memory":     {"needs": "sysbench",  "fn": bench_memory},
     "net":        {"needs": "iperf3",    "fn": bench_net},
     "syscall":    {"needs": "perf",      "fn": lambda: _perf_usecs("syscall", "basic")},

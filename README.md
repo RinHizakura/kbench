@@ -30,7 +30,7 @@ single testcase.
 `--output DIR` stores results under `DIR/` instead of `runs/` (a separate result set with
 its own history and baseline).
 Benchmarks whose tool is missing are skipped and listed in the report; `./setup.sh`
-installs all dependencies. `rtla` needs root — use `sudo ./kbench.py run` to include it.
+installs all dependencies.
 
 ## Benchmarks
 
@@ -38,7 +38,6 @@ installs all dependencies. `rtla` needs root — use `sudo ./kbench.py run` to i
 |------------|-------------|--------------------------------------------------------------------------|
 | fio        | fio         | block I/O: 4k rand r/w IOPS + p99 lat, 1M seq throughput, 4k fsync write |
 | schbench   | schbench    | scheduler wakeup latency p50/p99/p99.9, avg rps                          |
-| rtla       | rtla (root) | timer IRQ/thread wakeup latency (timerlat)                               |
 | memory     | sysbench    | memory bandwidth, read/write MiB/s                                       |
 | net        | iperf3      | loopback TCP Gbps (plain + zero-copy), 64B UDP pps (1 + N streams)       |
 | syscall    | perf        | syscall entry/exit overhead                                              |
