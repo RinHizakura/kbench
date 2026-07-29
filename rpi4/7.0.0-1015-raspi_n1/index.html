@@ -1,0 +1,99 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kbench report</title>
+<style>
+  body { font: 15px/1.5 system-ui, sans-serif; max-width: 60rem; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
+  h1 { font-size: 1.4rem; }
+  select { font: inherit; padding: .2rem; max-width: 100%; }
+  label { margin-right: 1.5rem; }
+  table { border-collapse: collapse; margin-top: 1rem; width: 100%; }
+  th, td { text-align: left; padding: .35rem .7rem; border-bottom: 1px solid #ddd; }
+  th { border-bottom: 2px solid #999; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .reg { color: #c0392b; font-weight: 600; }
+  .imp { color: #1e8449; }
+  .sys { color: #666; font-size: .85rem; margin: .3rem 0; overflow-wrap: anywhere; }
+  #sys table { font-size: .85rem; color: #444; }
+  #sys td { overflow-wrap: anywhere; }
+  td.diff { background: #fff3cd; }
+</style>
+<h1>kbench report</h1>
+<p>
+  <label>result <select id="cur"></select></label>
+  <label>compare with <select id="base"></select></label>
+  <label>benchmark <select id="bench"></select></label>
+</p>
+<div id="sys"></div>
+<div id="out"></div>
+<script>
+const DATA = {"7.0.0-1015-raspi_n1": {"sysinfo": {"kernel": "7.0.0-1015-raspi", "date": "2026-07-29T23:50:56", "cmdline": "coherent_pool=1M 8250.nr_uarts=1 snd_bcm2835.enable_headphones=0 numa_policy=interleave nvme.max_host_mem_size_mb=0 snd_bcm2835.enable_headphones=1 snd_bcm2835.enable_hdmi=1 snd_bcm2835.enable_hdmi=0  numa=fake=2 system_heap.max_order=0 iommu_dma_numa_policy=interleave smsc95xx.macaddr=D8:3A:DD:0A:CC:5F vc_mem.mem_base=0x3ec00000 vc_mem.mem_size=0x40000000  console=ttyAMA0,115200 multipath=off dwc_otg.lpm_enable=0 console=tty1 root=LABEL=writable rootfstype=ext4 panic=10 rootwait fixrtc", "governor": "ondemand"}, "benchmarks": {"fio": {"randread-4k.iops": {"value": 3362.6, "better": "higher"}, "randread-4k.p99_lat_us": {"value": 31326.2, "better": "lower"}, "randwrite-4k.iops": {"value": 964.5, "better": "higher"}, "randwrite-4k.p99_lat_us": {"value": 107479.0, "better": "lower"}, "seqread-1m.bw_mbps": {"value": 46.6, "better": "higher"}, "seqread-1m.p99_lat_us": {"value": 181403.6, "better": "lower"}, "seqwrite-1m.bw_mbps": {"value": 40.7, "better": "higher"}, "seqwrite-1m.p99_lat_us": {"value": 341835.8, "better": "lower"}, "syncwrite-4k.iops": {"value": 234.6, "better": "higher"}, "syncwrite-4k.p99_lat_us": {"value": 2342.9, "better": "lower"}}, "schbench": {"p50.0_us": {"value": 989, "better": "lower"}, "p99.0_us": {"value": 3260, "better": "lower"}, "p99.9_us": {"value": 5144, "better": "lower"}, "avg_rps": {"value": 170.47, "better": "higher"}}, "memory": {"read.bw_mibps": {"value": 6191.6, "better": "higher"}, "write.bw_mibps": {"value": 5507.01, "better": "higher"}}, "net": {"tcp.bw_gbps": {"value": 12.59, "better": "higher"}, "tcp-zc.bw_gbps": {"value": 17.92, "better": "higher"}, "udp-64b.pps": {"value": 77107, "better": "higher"}, "udp-64b-multi.pps": {"value": 130904, "better": "higher"}}, "syscall": {"usecs_op": {"value": 0.594472, "better": "lower"}}, "perf-sched": {"usecs_op": {"value": 5.969161, "better": "lower"}}, "ipc": {"total_s": {"value": 8.091, "better": "lower"}}, "pagefault": {"bogo_ops_s": {"value": 15723.31, "better": "higher"}}, "fork": {"bogo_ops_s": {"value": 1929.82, "better": "higher"}}}, "skipped": {}}};
+const THRESHOLD = 5.0;
+const INIT = {"cur": "7.0.0-1015-raspi_n1", "base": ""};  // {cur: name, base: name or ""}
+const names = Object.keys(DATA).sort((a, b) => DATA[b].sysinfo.date.localeCompare(DATA[a].sysinfo.date));  // newest first
+const $ = id => document.getElementById(id);
+for (const n of names) $("cur").add(new Option(n, n));
+$("base").add(new Option("— none —", ""));
+for (const n of names) $("base").add(new Option(n, n));
+if (INIT.cur) $("cur").value = INIT.cur;
+$("base").value = INIT.base || "";
+$("bench").add(new Option("— all —", ""));
+for (const b of [...new Set(names.flatMap(n => Object.keys(DATA[n].benchmarks)))].sort())
+  $("bench").add(new Option(b, b));
+
+function metrics(r) {
+  const out = [];
+  for (const [bench, ms] of Object.entries(r.benchmarks))
+    for (const [metric, m] of Object.entries(ms))
+      out.push([bench, metric, m]);
+  return out;
+}
+
+function sysTable(cur, base) {
+  const keys = [...new Set([...Object.keys(cur.sysinfo), ...(base ? Object.keys(base.sysinfo) : [])])];
+  const head = base
+    ? "<tr><th>sysinfo</th><th>baseline</th><th>current</th></tr>"
+    : "<tr><th>sysinfo</th><th>value</th></tr>";
+  const rows = keys.map(k => {
+    const cv = cur.sysinfo[k] ?? "–";
+    if (!base) return `<tr><td>${k}</td><td>${cv}</td></tr>`;
+    const bv = base.sysinfo[k] ?? "–";
+    const cls = bv !== cv && k !== "date" ? ' class="diff"' : "";
+    return `<tr><td>${k}</td><td${cls}>${bv}</td><td${cls}>${cv}</td></tr>`;
+  }).join("");
+  return `<table>${head}${rows}</table>`;
+}
+
+function render() {
+  const cur = DATA[$("cur").value], base = DATA[$("base").value] || null;
+  $("sys").innerHTML = sysTable(cur, base);
+  let rows = "";
+  for (const [bench, metric, m] of metrics(cur)) {
+    if ($("bench").value && bench !== $("bench").value) continue;
+    const bm = base?.benchmarks[bench]?.[metric];
+    let cells = `<td class="num">${m.value}</td>`;
+    if (base) {
+      if (bm && bm.value) {
+        const d = (m.value - bm.value) / bm.value * 100;
+        const worse = m.better === "higher" ? d < -THRESHOLD : d > THRESHOLD;
+        const better = m.better === "higher" ? d > THRESHOLD : d < -THRESHOLD;
+        const cls = worse ? "reg" : better ? "imp" : "";
+        const st = worse ? "REGRESSION" : better ? "improved" : "ok";
+        cells = `<td class="num">${bm.value}</td>` + cells +
+                `<td class="num ${cls}">${d > 0 ? "+" : ""}${d.toFixed(1)}%</td><td class="${cls}">${st}</td>`;
+      } else {
+        cells = `<td class="num">–</td>` + cells + `<td class="num"></td><td>new</td>`;
+      }
+    }
+    rows += `<tr><td>${bench}</td><td>${metric}</td>${cells}</tr>`;
+  }
+  const head = base
+    ? "<tr><th>benchmark</th><th>metric</th><th>baseline</th><th>current</th><th>delta</th><th>status</th></tr>"
+    : "<tr><th>benchmark</th><th>metric</th><th>value</th></tr>";
+  const skipped = Object.entries(cur.skipped || {})
+    .map(([n, why]) => `<p class="sys">skipped ${n}: ${why}</p>`).join("");
+  $("out").innerHTML = `<table>${head}${rows}</table>${skipped}`;
+}
+$("cur").onchange = $("base").onchange = $("bench").onchange = render;
+render();
+</script>
