@@ -11,6 +11,7 @@ Latest report: <https://rinhizakura.github.io/kbench/>
 ./kbench.py run --output rpi4    # per-platform result set -> data/rpi4.json
 ./kbench.py list --output rpi4   # list saved runs
 ./kbench.py rm <run> --output rpi4
+python3 -m http.server            # view report locally at http://localhost:8000
 ```
 
 ## Benchmarks

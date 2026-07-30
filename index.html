@@ -31,12 +31,13 @@
 const THRESHOLD = 5;  // flag as regression if worse than baseline by this %
 const q = new URLSearchParams(location.search);  // ?platform=<dir>&cur=<run>&base=<run> deep-links a comparison
 const $ = id => document.getElementById(id);
-const platforms = await (await fetch("data/platforms.json")).json();
+const opts = { cache: "no-cache" };  // Pages sends max-age=600; revalidate so fresh runs show up immediately
+const platforms = await (await fetch("data/platforms.json", opts)).json();
 const plat = q.get("platform") ?? platforms[0];
 for (const p of platforms) $("plat").add(new Option(p, p));
 $("plat").value = plat;
 $("plat").onchange = () => location.search = "?platform=" + encodeURIComponent($("plat").value);
-const DATA = await (await fetch(`data/${plat}.json`)).json();
+const DATA = await (await fetch(`data/${plat}.json`, opts)).json();
 const names = Object.keys(DATA).sort((a, b) => DATA[b].sysinfo.date.localeCompare(DATA[a].sysinfo.date));  // newest first
 for (const n of names) $("cur").add(new Option(n, n));
 $("base").add(new Option("— none —", ""));
