@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """kbench — kernel regression benchmark runner.
 
-    ./kbench.py run [bench...] [--output PLATFORM]   # append a run to data/PLATFORM.json
-    ./kbench.py list [--output PLATFORM]             # list saved runs
-    ./kbench.py rm <run> [--output PLATFORM]         # delete one run
+    ./kbench.py run [bench...] [-o PLATFORM]   # append a run to data/PLATFORM.json
+    ./kbench.py list [-o PLATFORM]             # list saved runs
+    ./kbench.py rm <run> [-o PLATFORM]         # delete one run
 """
 import json, os, re, shutil, statistics, subprocess, sys, time
 from datetime import datetime
@@ -206,12 +206,13 @@ def cmd_run(only=None):
 
 if __name__ == "__main__":
     args = sys.argv[1:]
-    if "--output" in args:
-        i = args.index("--output")
-        if i + 1 >= len(args):
-            sys.exit("--output needs a value")
-        PREFIX = args[i + 1]
-        del args[i:i + 2]
+    for flag in ("--output", "-o"):
+        if flag in args:
+            i = args.index(flag)
+            if i + 1 >= len(args):
+                sys.exit(f"{flag} needs a value")
+            PREFIX = args[i + 1]
+            del args[i:i + 2]
     if not args or args[0] == "run":
         cmd_run(only=args[1:] or None)
     elif args[0] == "list":
