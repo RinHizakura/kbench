@@ -17,6 +17,7 @@
   #sys table { font-size: .85rem; color: #444; }
   #sys td { overflow-wrap: anywhere; }
   td.diff { background: #fff3cd; }
+  td span[title] { text-decoration: underline dotted #999; cursor: help; }
 </style>
 <h1>kbench report</h1>
 <p>
@@ -75,7 +76,8 @@ function render() {
   const cur = DATA[$("cur").value], base = DATA[$("base").value] || null;
   $("sys").innerHTML = sysTable(cur, base);
   let rows = "";
-  const fmt = m => m.std ? `${m.value} <span class="sys">±${m.std}</span>` : m.value;
+  const fmt = m => (m.samples ? `<span title="runs: ${m.samples.join(", ")}">${m.value}</span>` : m.value)
+    + (m.std ? ` <span class="sys">±${m.std}</span>` : "");
   for (const [bench, metric, m] of metrics(cur)) {
     if ($("bench").value && bench !== $("bench").value) continue;
     const bm = base?.benchmarks[bench]?.[metric];
