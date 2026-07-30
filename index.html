@@ -75,18 +75,21 @@ function render() {
   const cur = DATA[$("cur").value], base = DATA[$("base").value] || null;
   $("sys").innerHTML = sysTable(cur, base);
   let rows = "";
+  const fmt = m => m.std ? `${m.value} <span class="sys">±${m.std}</span>` : m.value;
   for (const [bench, metric, m] of metrics(cur)) {
     if ($("bench").value && bench !== $("bench").value) continue;
     const bm = base?.benchmarks[bench]?.[metric];
-    let cells = `<td class="num">${m.value}</td>`;
+    let cells = `<td class="num">${fmt(m)}</td>`;
     if (base) {
       if (bm && bm.value) {
         const d = (m.value - bm.value) / bm.value * 100;
-        const worse = m.better === "higher" ? d < -THRESHOLD : d > THRESHOLD;
-        const better = m.better === "higher" ? d > THRESHOLD : d < -THRESHOLD;
+        // significant only if the delta clears the runs' own noise (2σ combined)
+        const sig = Math.abs(m.value - bm.value) > 2 * Math.hypot(m.std || 0, bm.std || 0);
+        const worse = sig && (m.better === "higher" ? d < -THRESHOLD : d > THRESHOLD);
+        const better = sig && (m.better === "higher" ? d > THRESHOLD : d < -THRESHOLD);
         const cls = worse ? "reg" : better ? "imp" : "";
         const st = worse ? "REGRESSION" : better ? "improved" : "ok";
-        cells = `<td class="num">${bm.value}</td>` + cells +
+        cells = `<td class="num">${fmt(bm)}</td>` + cells +
                 `<td class="num ${cls}">${d > 0 ? "+" : ""}${d.toFixed(1)}%</td><td class="${cls}">${st}</td>`;
       } else {
         cells = `<td class="num">–</td>` + cells + `<td class="num"></td><td>new</td>`;

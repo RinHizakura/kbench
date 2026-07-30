@@ -5,7 +5,7 @@
     ./kbench.py list [--output PLATFORM]             # list saved runs
     ./kbench.py rm <run> [--output PLATFORM]         # delete one run
 """
-import json, os, re, shutil, subprocess, sys, time
+import json, os, re, shutil, statistics, subprocess, sys, time
 from datetime import datetime
 from pathlib import Path
 
@@ -136,6 +136,16 @@ BENCHMARKS = {
     "fork":       {"needs": "stress-ng", "fn": lambda: _stressng("fork")},
 }
 
+def aggregate(runs):
+    """Merge repeated runs of one benchmark into mean + std per metric."""
+    out = {}
+    for k in {k: None for r in runs for k in r}:  # ordered union of metric keys
+        vals = [r[k]["value"] for r in runs if k in r]
+        out[k] = {"value": round(statistics.mean(vals), 2),
+                  "std": round(statistics.stdev(vals), 2) if len(vals) > 1 else 0,
+                  "better": next(r[k]["better"] for r in runs if k in r)}
+    return out
+
 # --- sysinfo ---
 
 def sysinfo():
@@ -162,6 +172,8 @@ def save_data(data):
 
 # --- commands ---
 
+REPEAT = 5  # iterations per benchmark, aggregated to mean+std
+
 def cmd_run(only=None):
     result = {"sysinfo": sysinfo(), "benchmarks": {}, "skipped": {}}
     for name, b in BENCHMARKS.items():
@@ -171,10 +183,10 @@ def cmd_run(only=None):
             result["skipped"][name] = f"'{b['needs']}' not installed"
             print(f"SKIP {name}: {b['needs']} not installed")
             continue
-        print(f"RUN  {name} ...", flush=True)
+        print(f"RUN  {name} x{REPEAT} ...", flush=True)
         t0 = time.time()
         try:
-            result["benchmarks"][name] = b["fn"]()
+            result["benchmarks"][name] = aggregate([b["fn"]() for _ in range(REPEAT)])
             print(f"     done in {time.time()-t0:.0f}s")
         except Exception as e:
             result["skipped"][name] = str(e)
