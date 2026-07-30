@@ -10,15 +10,32 @@ from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-PREFIX = "runs"  # --output overrides; data lands in data/<PREFIX>.json
+PREFIX = "runs"  # -o overrides; data lands in data/<PREFIX>.json
+NPROC = str(os.cpu_count() or 4)
+REPEAT = 5  # iterations per benchmark, aggregated to mean+std
 
-# ---------------------------------------------------------------- runners
+# Each bench_* returns {metric: (value, "higher"|"lower")}; aggregate() folds
+# REPEAT of those into the stored {metric: {value, std, better}} form.
 
-def run(cmd, **kw):
-    return subprocess.run(cmd, capture_output=True, text=True, **kw)
+def run_bench(cmd, **kw):
+    """Every benchmark command goes through here: print it, run it,
+    raise on failure, return the finished process."""
+    print("       " + " ".join(cmd), flush=True)
+    r = subprocess.run(cmd, capture_output=True, text=True, **kw)
+    if r.returncode:
+        err = r.stderr.strip()
+        raise RuntimeError(err.splitlines()[0] if err else f"{cmd[0]} exited {r.returncode}")
+    return r
+
+def parse(pattern, r, what):
+    """First regex group of a finished command's output as float, or a readable error."""
+    m = re.search(pattern, r.stdout + r.stderr)
+    if not m:
+        raise RuntimeError(f"could not parse {what} output")
+    return float(m.group(1))
 
 def bench_fio():
-    """4k randread/randwrite + 1M seqread on a temp file. Metrics: IOPS, p99 lat."""
+    """4k randread/randwrite + 1M seq r/w + 4k fsync on a temp file."""
     out = {}
     testfile = ROOT / ".fio-testfile"
     jobs = [
@@ -29,100 +46,77 @@ def bench_fio():
         ("syncwrite-4k", ["--rw=randwrite", "--bs=4k", "--iodepth=1", "--fsync=1"]),
     ]
     for name, extra in jobs:
-        r = run(["fio", "--name", name, f"--filename={testfile}", "--size=1g",
-                 "--runtime=30", "--time_based", "--ioengine=libaio", "--direct=1",
-                 "--group_reporting", "--output-format=json"] + extra)
-        j = json.loads(r.stdout)["jobs"][0]
-        side = j["write"] if "write" in name else j["read"]
+        r = run_bench(["fio", "--name", name, f"--filename={testfile}", "--size=1g",
+                       "--runtime=30", "--time_based", "--ioengine=libaio", "--direct=1",
+                       "--group_reporting", "--output-format=json"] + extra)
+        side = json.loads(r.stdout)["jobs"][0]["write" if "write" in name else "read"]
         if name.startswith("seq"):
-            out[f"{name}.bw_mbps"] = {"value": round(side["bw_bytes"] / 1e6, 1), "better": "higher"}
+            out[f"{name}.bw_mbps"] = (side["bw_bytes"] / 1e6, "higher")
         else:
-            out[f"{name}.iops"] = {"value": round(side["iops"], 1), "better": "higher"}
-        p99 = side["clat_ns"]["percentile"]["99.000000"] / 1000
-        out[f"{name}.p99_lat_us"] = {"value": round(p99, 1), "better": "lower"}
+            out[f"{name}.iops"] = (side["iops"], "higher")
+        out[f"{name}.p99_lat_us"] = (side["clat_ns"]["percentile"]["99.000000"] / 1000, "lower")
     testfile.unlink(missing_ok=True)
     return out
 
 def bench_schbench():
-    """Scheduler wakeup latency. Metrics: p50/p99/p99.9 (usec)."""
-    n = os.cpu_count() or 4
-    r = run(["schbench", "-m", "2", "-t", str(n), "-r", "30"])
+    """Scheduler wakeup latency p50/p99/p99.9 + avg rps."""
+    r = run_bench(["schbench", "-m", "2", "-t", NPROC, "-r", "30"])
     text = r.stdout + r.stderr  # schbench prints to stderr
     out = {}
-    # matches both old ("50.0th: 45") and new ("* 50.0th: 45") formats
-    for pct, val in re.findall(r"\*?\s*(\d+\.\d)th:\s+(\d+)", text):
+    for pct, val in re.findall(r"\*?\s*(\d+\.\d)th:\s+(\d+)", text):  # old + new output formats
         if pct in ("50.0", "99.0", "99.9") and f"p{pct}_us" not in out:
-            out[f"p{pct}_us"] = {"value": int(val), "better": "lower"}
-    rps = re.search(r"average rps:\s+([\d.]+)", text)
-    if rps:
-        out["avg_rps"] = {"value": float(rps.group(1)), "better": "higher"}
+            out[f"p{pct}_us"] = (int(val), "lower")
+    out["avg_rps"] = (parse(r"average rps:\s+([\d.]+)", r, "schbench rps"), "higher")
     return out
 
 def bench_memory():
-    """Memory bandwidth via sysbench (1M blocks). Metrics: MiB/s read/write."""
+    """Memory bandwidth via sysbench (1M blocks)."""
     out = {}
     for op in ("read", "write"):
-        r = run(["sysbench", "memory", "--memory-block-size=1M",
-                 "--memory-total-size=20G", f"--memory-oper={op}", "run"])
-        m = re.search(r"\(([\d.]+) MiB/sec\)", r.stdout)
-        if not m:
-            raise RuntimeError(f"could not parse sysbench {op} output")
-        out[f"{op}.bw_mibps"] = {"value": float(m.group(1)), "better": "higher"}
+        r = run_bench(["sysbench", "memory", "--memory-block-size=1M",
+                       "--memory-total-size=20G", f"--memory-oper={op}", "run"])
+        out[f"{op}.bw_mibps"] = (parse(r"\(([\d.]+) MiB/sec\)", r, f"sysbench {op}"), "higher")
     return out
 
 def bench_net():
-    """Kernel net stack over loopback via iperf3.
-    Metrics: TCP Gbps (plain + zero-copy), 64B-UDP pps (1 + N streams)."""
-    bw = lambda e: ("bw_gbps", round(e["sum_received"]["bits_per_second"] / 1e9, 2))
-    pps = lambda e: ("pps", round(e["sum"]["packets"] / e["sum"]["seconds"]))
+    """Loopback TCP Gbps (plain + zero-copy), 64B UDP pps (1 + N streams)."""
+    bw = lambda e: ("bw_gbps", e["sum_received"]["bits_per_second"] / 1e9)
+    pps = lambda e: ("pps", e["sum"]["packets"] / e["sum"]["seconds"])
     udp = ["-u", "-b", "0", "-l", "64"]
-    nstreams = str(os.cpu_count() or 4)
     out = {}
     for name, extra, metric in [
-        ("tcp",           [],                      bw),
-        ("tcp-zc",        ["-Z"],                  bw),   # zero-copy (sendfile) send path
-        ("udp-64b",       udp,                     pps),
-        ("udp-64b-multi", udp + ["-P", nstreams],  pps),
+        ("tcp",           [],                  bw),
+        ("tcp-zc",        ["-Z"],              bw),   # zero-copy (sendfile) send path
+        ("udp-64b",       udp,                 pps),
+        ("udp-64b-multi", udp + ["-P", NPROC], pps),
     ]:
         srv = subprocess.Popen(["iperf3", "-s", "-1", "-p", "5210"],
                                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         time.sleep(0.3)  # let server bind
-        r = run(["iperf3", "-c", "127.0.0.1", "-p", "5210", "-t", "10", "-J"] + extra)
-        srv.wait()
-        if r.returncode:
-            raise RuntimeError(r.stderr.strip() or "iperf3 failed")
+        try:
+            r = run_bench(["iperf3", "-c", "127.0.0.1", "-p", "5210", "-t", "10", "-J"] + extra)
+        finally:
+            srv.terminate()  # no-op if -1 already let it exit; kills it if the client failed
+            srv.wait()
         k, v = metric(json.loads(r.stdout)["end"])
-        out[f"{name}.{k}"] = {"value": v, "better": "higher"}
+        out[f"{name}.{k}"] = (v, "higher")
     return out
 
-def _perf(*args):
-    """Run perf bench, return its text output."""
-    r = run(["perf", "bench", *args])
-    if r.returncode:  # ubuntu wrapper exists but real perf may be missing for this kernel
-        raise RuntimeError(r.stderr.strip().splitlines()[0] if r.stderr.strip() else "perf failed")
-    return r.stdout + r.stderr
-
 def _perf_usecs(*args):
-    m = re.search(r"([\d.]+) usecs/op", _perf(*args))
-    if not m:
-        raise RuntimeError(f"could not parse perf bench {' '.join(args)}")
-    return {"usecs_op": {"value": float(m.group(1)), "better": "lower"}}
+    r = run_bench(["perf", "bench", *args])
+    return {"usecs_op": (parse(r"([\d.]+) usecs/op", r, f"perf {args[0]}"), "lower")}
 
 def bench_ipc():
     """Scheduler+IPC throughput, hackbench-style (perf bench sched messaging)."""
-    m = re.search(r"Total time:\s+([\d.]+)", _perf("sched", "messaging", "-g", "10", "-l", "1000"))
-    if not m:
-        raise RuntimeError("could not parse perf bench messaging")
-    return {"total_s": {"value": float(m.group(1)), "better": "lower"}}
+    r = run_bench(["perf", "bench", "sched", "messaging", "-g", "10", "-l", "1000"])
+    return {"total_s": (parse(r"Total time:\s+([\d.]+)", r, "perf messaging"), "lower")}
 
 def _stressng(stressor):
     """bogo ops/s (real time) for one stress-ng stressor, N workers x 15s."""
-    r = run(["stress-ng", f"--{stressor}", str(os.cpu_count() or 4), "-t", "15", "--metrics-brief"])
-    m = re.search(rf"{stressor}\s+\d+\s+[\d.]+\s+[\d.]+\s+[\d.]+\s+([\d.]+)",
-                  r.stdout + r.stderr)  # 5th col = bogo ops/s (real time)
-    if not m:
-        raise RuntimeError(f"could not parse stress-ng {stressor}")
-    return {"bogo_ops_s": {"value": float(m.group(1)), "better": "higher"}}
+    r = run_bench(["stress-ng", f"--{stressor}", NPROC, "-t", "15", "--metrics-brief"])
+    v = parse(rf"{stressor}\s+\d+\s+[\d.]+\s+[\d.]+\s+[\d.]+\s+([\d.]+)",  # 5th col = bogo ops/s (real)
+              r, f"stress-ng {stressor}")
+    return {"bogo_ops_s": (v, "higher")}
 
 BENCHMARKS = {
     "fio":        {"needs": "fio",       "fn": bench_fio},
@@ -137,13 +131,13 @@ BENCHMARKS = {
 }
 
 def aggregate(runs):
-    """Merge repeated runs of one benchmark into mean + std per metric."""
+    """REPEAT runs of {metric: (value, better)} -> {metric: {value, std, better}}."""
     out = {}
     for k in {k: None for r in runs for k in r}:  # ordered union of metric keys
-        vals = [r[k]["value"] for r in runs if k in r]
+        vals = [r[k][0] for r in runs if k in r]
         out[k] = {"value": round(statistics.mean(vals), 2),
                   "std": round(statistics.stdev(vals), 2) if len(vals) > 1 else 0,
-                  "better": next(r[k]["better"] for r in runs if k in r)}
+                  "better": next(r[k][1] for r in runs if k in r)}
     return out
 
 # --- sysinfo ---
@@ -172,8 +166,6 @@ def save_data(data):
 
 # --- commands ---
 
-REPEAT = 5  # iterations per benchmark, aggregated to mean+std
-
 def cmd_run(only=None):
     result = {"sysinfo": sysinfo(), "benchmarks": {}, "skipped": {}}
     for name, b in BENCHMARKS.items():
@@ -183,10 +175,13 @@ def cmd_run(only=None):
             result["skipped"][name] = f"'{b['needs']}' not installed"
             print(f"SKIP {name}: {b['needs']} not installed")
             continue
-        print(f"RUN  {name} x{REPEAT} ...", flush=True)
         t0 = time.time()
         try:
-            result["benchmarks"][name] = aggregate([b["fn"]() for _ in range(REPEAT)])
+            runs = []
+            for i in range(REPEAT):
+                print(f"RUN  {name} ({i + 1}/{REPEAT}) ...", flush=True)
+                runs.append(b["fn"]())
+            result["benchmarks"][name] = aggregate(runs)
             print(f"     done in {time.time()-t0:.0f}s")
         except Exception as e:
             result["skipped"][name] = str(e)
