@@ -1,0 +1,156 @@
+{
+  "7.0.0-1015-raspi_n1": {
+    "sysinfo": {
+      "kernel": "7.0.0-1015-raspi",
+      "date": "2026-07-30T23:50:24",
+      "cmdline": "coherent_pool=1M 8250.nr_uarts=1 snd_bcm2835.enable_headphones=0 numa_policy=interleave nvme.max_host_mem_size_mb=0 snd_bcm2835.enable_headphones=1 snd_bcm2835.enable_hdmi=1 snd_bcm2835.enable_hdmi=0  numa=fake=2 system_heap.max_order=0 iommu_dma_numa_policy=interleave smsc95xx.macaddr=D8:3A:DD:0A:CC:5F vc_mem.mem_base=0x3ec00000 vc_mem.mem_size=0x40000000  console=ttyAMA0,115200 multipath=off dwc_otg.lpm_enable=0 console=tty1 root=LABEL=writable rootfstype=ext4 panic=10 rootwait fixrtc",
+      "governor": "ondemand"
+    },
+    "benchmarks": {
+      "fio": {
+        "randread-4k.iops": {
+          "value": 3368.33,
+          "std": 136.42,
+          "better": "higher"
+        },
+        "randread-4k.p99_lat_us": {
+          "value": 31431.07,
+          "std": 1105.99,
+          "better": "lower"
+        },
+        "randwrite-4k.iops": {
+          "value": 630.2,
+          "std": 23.38,
+          "better": "higher"
+        },
+        "randwrite-4k.p99_lat_us": {
+          "value": 577975.09,
+          "std": 18378.52,
+          "better": "lower"
+        },
+        "seqread-1m.bw_mbps": {
+          "value": 46.34,
+          "std": 0.49,
+          "better": "higher"
+        },
+        "seqread-1m.p99_lat_us": {
+          "value": 236978.18,
+          "std": 110379.75,
+          "better": "lower"
+        },
+        "seqwrite-1m.bw_mbps": {
+          "value": 40.82,
+          "std": 0.7,
+          "better": "higher"
+        },
+        "seqwrite-1m.p99_lat_us": {
+          "value": 325058.56,
+          "std": 25339.98,
+          "better": "lower"
+        },
+        "syncwrite-4k.iops": {
+          "value": 209.77,
+          "std": 17.81,
+          "better": "higher"
+        },
+        "syncwrite-4k.p99_lat_us": {
+          "value": 5708.19,
+          "std": 2919.22,
+          "better": "lower"
+        }
+      },
+      "schbench": {
+        "p50.0_us": {
+          "value": 754,
+          "std": 245.29,
+          "better": "lower"
+        },
+        "p99.0_us": {
+          "value": 3176.8,
+          "std": 55.02,
+          "better": "lower"
+        },
+        "p99.9_us": {
+          "value": 4674.4,
+          "std": 728.06,
+          "better": "lower"
+        },
+        "avg_rps": {
+          "value": 169.15,
+          "std": 0.31,
+          "better": "higher"
+        }
+      },
+      "memory": {
+        "read.bw_mibps": {
+          "value": 6595.89,
+          "std": 557.12,
+          "better": "higher"
+        },
+        "write.bw_mibps": {
+          "value": 5666.94,
+          "std": 115.56,
+          "better": "higher"
+        }
+      },
+      "net": {
+        "tcp.bw_gbps": {
+          "value": 12.56,
+          "std": 0.46,
+          "better": "higher"
+        },
+        "tcp-zc.bw_gbps": {
+          "value": 17.97,
+          "std": 0.27,
+          "better": "higher"
+        },
+        "udp-64b.pps": {
+          "value": 76024.56,
+          "std": 103.86,
+          "better": "higher"
+        },
+        "udp-64b-multi.pps": {
+          "value": 132243.73,
+          "std": 3137.0,
+          "better": "higher"
+        }
+      },
+      "syscall": {
+        "usecs_op": {
+          "value": 0.59,
+          "std": 0.0,
+          "better": "lower"
+        }
+      },
+      "perf-sched": {
+        "usecs_op": {
+          "value": 6.01,
+          "std": 0.06,
+          "better": "lower"
+        }
+      },
+      "ipc": {
+        "total_s": {
+          "value": 8.07,
+          "std": 0.08,
+          "better": "lower"
+        }
+      },
+      "pagefault": {
+        "bogo_ops_s": {
+          "value": 16613.3,
+          "std": 181.46,
+          "better": "higher"
+        }
+      },
+      "fork": {
+        "bogo_ops_s": {
+          "value": 1820.88,
+          "std": 39.28,
+          "better": "higher"
+        }
+      }
+    },
+    "skipped": {}
+  }
+}
