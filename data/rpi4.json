@@ -1,0 +1,331 @@
+{
+  "7.0.0-1015-raspi_n1": {
+    "sysinfo": {
+      "kernel": "7.0.0-1015-raspi",
+      "date": "2026-07-31T00:42:26",
+      "cmdline": "coherent_pool=1M 8250.nr_uarts=1 snd_bcm2835.enable_headphones=0 numa_policy=interleave nvme.max_host_mem_size_mb=0 snd_bcm2835.enable_headphones=1 snd_bcm2835.enable_hdmi=1 snd_bcm2835.enable_hdmi=0  numa=fake=2 system_heap.max_order=0 iommu_dma_numa_policy=interleave smsc95xx.macaddr=D8:3A:DD:0A:CC:5F vc_mem.mem_base=0x3ec00000 vc_mem.mem_size=0x40000000  console=ttyAMA0,115200 multipath=off dwc_otg.lpm_enable=0 console=tty1 root=LABEL=writable rootfstype=ext4 panic=10 rootwait fixrtc",
+      "governor": "ondemand"
+    },
+    "benchmarks": {
+      "fio": {
+        "randread-4k.iops": {
+          "value": 3330.72,
+          "std": 73.53,
+          "samples": [
+            3387.2,
+            3286.3,
+            3396.4,
+            3359.41,
+            3224.29
+          ],
+          "better": "higher"
+        },
+        "randread-4k.p99_lat_us": {
+          "value": 31535.92,
+          "std": 468.94,
+          "samples": [
+            31326.21,
+            31326.21,
+            31326.21,
+            31326.21,
+            32374.78
+          ],
+          "better": "lower"
+        },
+        "randwrite-4k.iops": {
+          "value": 626.53,
+          "std": 104.54,
+          "samples": [
+            731.17,
+            745.42,
+            588.25,
+            535.32,
+            532.48
+          ],
+          "better": "higher"
+        },
+        "randwrite-4k.p99_lat_us": {
+          "value": 581330.53,
+          "std": 159020.28,
+          "samples": [
+            367001.6,
+            455081.98,
+            708837.38,
+            700448.77,
+            675282.94
+          ],
+          "better": "lower"
+        },
+        "seqread-1m.bw_mbps": {
+          "value": 46.52,
+          "std": 0.11,
+          "samples": [
+            46.37,
+            46.61,
+            46.5,
+            46.49,
+            46.63
+          ],
+          "better": "higher"
+        },
+        "seqread-1m.p99_lat_us": {
+          "value": 186856.24,
+          "std": 11351.77,
+          "samples": [
+            177209.34,
+            191889.41,
+            181403.65,
+            179306.5,
+            204472.32
+          ],
+          "better": "lower"
+        },
+        "seqwrite-1m.bw_mbps": {
+          "value": 41.01,
+          "std": 0.73,
+          "samples": [
+            41.99,
+            41.03,
+            41.24,
+            40.82,
+            39.97
+          ],
+          "better": "higher"
+        },
+        "seqwrite-1m.p99_lat_us": {
+          "value": 288777.83,
+          "std": 34488.43,
+          "samples": [
+            299892.74,
+            308281.34,
+            299892.74,
+            308281.34,
+            227540.99
+          ],
+          "better": "lower"
+        },
+        "syncwrite-4k.iops": {
+          "value": 187.92,
+          "std": 37.75,
+          "samples": [
+            226.52,
+            144.37,
+            203.99,
+            213.94,
+            150.79
+          ],
+          "better": "higher"
+        },
+        "syncwrite-4k.p99_lat_us": {
+          "value": 8503.3,
+          "std": 8271.59,
+          "samples": [
+            2539.52,
+            17432.58,
+            2441.22,
+            2408.45,
+            17694.72
+          ],
+          "better": "lower"
+        }
+      },
+      "schbench": {
+        "p50.0_us": {
+          "value": 730.2,
+          "std": 176.11,
+          "samples": [
+            819,
+            983,
+            629,
+            691,
+            529
+          ],
+          "better": "lower"
+        },
+        "p99.0_us": {
+          "value": 3175.2,
+          "std": 65.39,
+          "samples": [
+            3276,
+            3140,
+            3180,
+            3180,
+            3100
+          ],
+          "better": "lower"
+        },
+        "p99.9_us": {
+          "value": 4936,
+          "std": 320.6,
+          "samples": [
+            5016,
+            5000,
+            5400,
+            4648,
+            4616
+          ],
+          "better": "lower"
+        },
+        "avg_rps": {
+          "value": 169.1,
+          "std": 0.28,
+          "samples": [
+            169.23,
+            169.5,
+            169.0,
+            169.0,
+            168.77
+          ],
+          "better": "higher"
+        }
+      },
+      "memory": {
+        "read.bw_mibps": {
+          "value": 6603.08,
+          "std": 420.9,
+          "samples": [
+            6476.65,
+            6709.27,
+            6999.83,
+            5938.86,
+            6890.8
+          ],
+          "better": "higher"
+        },
+        "write.bw_mibps": {
+          "value": 5643.97,
+          "std": 139.03,
+          "samples": [
+            5509.62,
+            5619.38,
+            5869.3,
+            5557.43,
+            5664.1
+          ],
+          "better": "higher"
+        }
+      },
+      "net": {
+        "tcp.bw_gbps": {
+          "value": 12.41,
+          "std": 0.53,
+          "samples": [
+            12.45,
+            11.74,
+            13.21,
+            12.37,
+            12.27
+          ],
+          "better": "higher"
+        },
+        "tcp-zc.bw_gbps": {
+          "value": 17.74,
+          "std": 0.1,
+          "samples": [
+            17.89,
+            17.69,
+            17.63,
+            17.71,
+            17.75
+          ],
+          "better": "higher"
+        },
+        "udp-64b.pps": {
+          "value": 75796.1,
+          "std": 444.75,
+          "samples": [
+            76196.42,
+            76112.05,
+            75876.2,
+            75075.74,
+            75720.09
+          ],
+          "better": "higher"
+        },
+        "udp-64b-multi.pps": {
+          "value": 131844.18,
+          "std": 1887.23,
+          "samples": [
+            130236.29,
+            133295.36,
+            131346.09,
+            130039.35,
+            134303.8
+          ],
+          "better": "higher"
+        }
+      },
+      "syscall": {
+        "usecs_op": {
+          "value": 0.6,
+          "std": 0.0,
+          "samples": [
+            0.6,
+            0.6,
+            0.6,
+            0.59,
+            0.6
+          ],
+          "better": "lower"
+        }
+      },
+      "perf-sched": {
+        "usecs_op": {
+          "value": 6.07,
+          "std": 0.06,
+          "samples": [
+            6.01,
+            6.14,
+            6.13,
+            6.07,
+            6.0
+          ],
+          "better": "lower"
+        }
+      },
+      "ipc": {
+        "total_s": {
+          "value": 8.13,
+          "std": 0.05,
+          "samples": [
+            8.08,
+            8.07,
+            8.16,
+            8.16,
+            8.17
+          ],
+          "better": "lower"
+        }
+      },
+      "pagefault": {
+        "bogo_ops_s": {
+          "value": 16651.56,
+          "std": 88.64,
+          "samples": [
+            16633.36,
+            16669.89,
+            16508.51,
+            16716.48,
+            16729.57
+          ],
+          "better": "higher"
+        }
+      },
+      "fork": {
+        "bogo_ops_s": {
+          "value": 1816.88,
+          "std": 65.76,
+          "samples": [
+            1920.11,
+            1790.99,
+            1739.9,
+            1821.41,
+            1811.97
+          ],
+          "better": "higher"
+        }
+      }
+    },
+    "skipped": {}
+  }
+}
