@@ -28,3 +28,37 @@ python3 -m http.server            # view report locally at http://localhost:8000
 | pagefault  | stress-ng   | page-fault rate                                                          |
 | fork       | stress-ng   | fork/exec rate                                                           |
 
+## Manual runs
+
+The same commands kbench runs, for reproducing one benchmark by hand:
+
+```sh
+# fio — one line per job; kbench adds --output-format=json for parsing
+fio --name randread-4k  --filename=testfile --size=1g --runtime=30 --time_based \
+    --ioengine=libaio --direct=1 --group_reporting --rw=randread --bs=4k --iodepth=32
+#   randwrite-4k: --rw=randwrite --bs=4k --iodepth=32
+#   seqread-1m:   --rw=read     --bs=1m --iodepth=8
+#   seqwrite-1m:  --rw=write    --bs=1m --iodepth=8
+#   syncwrite-4k: --rw=randwrite --bs=4k --iodepth=1 --fsync=1
+
+# schbench
+schbench -m 2 -t $(nproc) -r 30
+
+# memory (run once per --memory-oper=read|write)
+sysbench memory --memory-block-size=1M --memory-total-size=20G --memory-oper=read run
+
+# net — server in one shell, client in another; variants: -Z (tcp zero-copy),
+# -u -b 0 -l 64 (udp 64B), -u -b 0 -l 64 -P $(nproc) (udp multi-stream)
+iperf3 -s -1 -p 5210
+iperf3 -c 127.0.0.1 -p 5210 -t 10
+
+# syscall / perf-sched / ipc
+perf bench syscall basic
+perf bench sched pipe
+perf bench sched messaging -g 10 -l 1000
+
+# pagefault / fork
+stress-ng --fault $(nproc) -t 15 --metrics-brief
+stress-ng --fork  $(nproc) -t 15 --metrics-brief
+```
+
