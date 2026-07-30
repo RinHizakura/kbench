@@ -183,6 +183,7 @@ def cmd_run(only=None):
             for i in range(REPEAT):
                 print(f"RUN  {name} ({i + 1}/{REPEAT}) ...", flush=True)
                 runs.append(b["fn"]())
+                print("     -> " + "  ".join(f"{k}={round(v, 2)}" for k, (v, _) in runs[-1].items()), flush=True)
             result["benchmarks"][name] = aggregate(runs)
             print(f"     done in {time.time()-t0:.0f}s")
         except Exception as e:
