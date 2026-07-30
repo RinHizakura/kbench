@@ -46,6 +46,7 @@ def bench_fio():
         ("syncwrite-4k", ["--rw=randwrite", "--bs=4k", "--iodepth=1", "--fsync=1"]),
     ]
     for name, extra in jobs:
+        testfile.unlink(missing_ok=True)  # fresh file per job: no stale layout from a previous job/run
         r = run_bench(["fio", "--name", name, f"--filename={testfile}", "--size=1g",
                        "--runtime=30", "--time_based", "--ioengine=libaio", "--direct=1",
                        "--group_reporting", "--output-format=json"] + extra)
@@ -137,6 +138,7 @@ def aggregate(runs):
         vals = [r[k][0] for r in runs if k in r]
         out[k] = {"value": round(statistics.mean(vals), 2),
                   "std": round(statistics.stdev(vals), 2) if len(vals) > 1 else 0,
+                  "samples": [round(v, 2) for v in vals],
                   "better": next(r[k][1] for r in runs if k in r)}
     return out
 
