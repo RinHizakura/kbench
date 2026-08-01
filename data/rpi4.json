@@ -656,5 +656,334 @@
       }
     },
     "skipped": {}
+  },
+  "7.2.0-rc5-gea19e13c-f5098b6b_n3": {
+    "sysinfo": {
+      "kernel": "7.2.0-rc5-gea19e13c-f5098b6b",
+      "date": "2026-08-01T22:35:17",
+      "cmdline": "dma.dmachans=0x37f5 bcm2709.boardrev=0xd03115 bcm2709.serial=0x9d714099 bcm2709.uart_clock=48000000 bcm2709.disk_led_gpio=42 bcm2709.disk_led_active_low=0 smsc95xx.macaddr=D8:3A:DD:0A:CC:5F vc_mem.mem_base=0x3ec00000 vc_mem.mem_size=0x40000000  multipath=off dwc_otg.lpm_enable=0 console=tty1 root=LABEL=writable rootfstype=ext4 panic=10 rootwait fixrtc console=ttyS1,115200",
+      "governor": "schedutil"
+    },
+    "benchmarks": {
+      "fio": {
+        "randread-4k.iops": {
+          "value": 2894.98,
+          "std": 92.81,
+          "samples": [
+            3005.8,
+            2908.73,
+            2849.96,
+            2946.85,
+            2763.56
+          ],
+          "better": "higher"
+        },
+        "randread-4k.p99_lat_us": {
+          "value": 34576.79,
+          "std": 1891.26,
+          "samples": [
+            34865.15,
+            35913.73,
+            35913.73,
+            34865.15,
+            31326.21
+          ],
+          "better": "lower"
+        },
+        "randwrite-4k.iops": {
+          "value": 768.27,
+          "std": 111.13,
+          "samples": [
+            960.64,
+            697.02,
+            739.36,
+            688.77,
+            755.55
+          ],
+          "better": "higher"
+        },
+        "randwrite-4k.p99_lat_us": {
+          "value": 266548.02,
+          "std": 132331.37,
+          "samples": [
+            156237.82,
+            417333.25,
+            183500.8,
+            404750.34,
+            170917.89
+          ],
+          "better": "lower"
+        },
+        "seqread-1m.bw_mbps": {
+          "value": 45.99,
+          "std": 0.18,
+          "samples": [
+            45.69,
+            45.97,
+            46.13,
+            46.09,
+            46.07
+          ],
+          "better": "higher"
+        },
+        "seqread-1m.p99_lat_us": {
+          "value": 206150.04,
+          "std": 24653.8,
+          "samples": [
+            248512.51,
+            204472.32,
+            198180.86,
+            185597.95,
+            193986.56
+          ],
+          "better": "lower"
+        },
+        "seqwrite-1m.bw_mbps": {
+          "value": 39.69,
+          "std": 0.84,
+          "samples": [
+            38.6,
+            40.37,
+            40.12,
+            38.98,
+            40.4
+          ],
+          "better": "higher"
+        },
+        "seqwrite-1m.p99_lat_us": {
+          "value": 268645.17,
+          "std": 59193.02,
+          "samples": [
+            225443.84,
+            274726.91,
+            254803.97,
+            221249.54,
+            367001.6
+          ],
+          "better": "lower"
+        },
+        "syncwrite-4k.iops": {
+          "value": 211.09,
+          "std": 11.0,
+          "samples": [
+            209.16,
+            198.89,
+            221.93,
+            222.94,
+            202.52
+          ],
+          "better": "higher"
+        },
+        "syncwrite-4k.p99_lat_us": {
+          "value": 7231.9,
+          "std": 6063.02,
+          "samples": [
+            14745.6,
+            12910.59,
+            2539.52,
+            3293.18,
+            2670.59
+          ],
+          "better": "lower"
+        }
+      },
+      "schbench": {
+        "p50.0_us": {
+          "value": 2647.6,
+          "std": 1991.41,
+          "samples": [
+            1078,
+            20,
+            3404,
+            4328,
+            4408
+          ],
+          "better": "lower"
+        },
+        "p99.0_us": {
+          "value": 5956.8,
+          "std": 34.69,
+          "samples": [
+            6008,
+            5928,
+            5976,
+            5928,
+            5944
+          ],
+          "better": "lower"
+        },
+        "p99.9_us": {
+          "value": 8432,
+          "std": 113.14,
+          "samples": [
+            8528,
+            8496,
+            8432,
+            8464,
+            8240
+          ],
+          "better": "lower"
+        },
+        "avg_rps": {
+          "value": 182.64,
+          "std": 0.33,
+          "samples": [
+            182.67,
+            182.27,
+            182.4,
+            183.1,
+            182.77
+          ],
+          "better": "higher"
+        }
+      },
+      "memory": {
+        "read.bw_mibps": {
+          "value": 6676.64,
+          "std": 358.06,
+          "samples": [
+            6588.25,
+            6434.03,
+            6525.87,
+            7309.56,
+            6525.49
+          ],
+          "better": "higher"
+        },
+        "write.bw_mibps": {
+          "value": 4619.45,
+          "std": 67.05,
+          "samples": [
+            4582.82,
+            4593.49,
+            4689.89,
+            4689.61,
+            4541.45
+          ],
+          "better": "higher"
+        }
+      },
+      "net": {
+        "tcp.bw_gbps": {
+          "value": 17.4,
+          "std": 3.21,
+          "samples": [
+            20.46,
+            18.33,
+            17.66,
+            18.58,
+            11.96
+          ],
+          "better": "higher"
+        },
+        "tcp-zc.bw_gbps": {
+          "value": 30.49,
+          "std": 3.84,
+          "samples": [
+            33.11,
+            31.07,
+            23.78,
+            32.77,
+            31.7
+          ],
+          "better": "higher"
+        },
+        "udp-64b.pps": {
+          "value": 124711.6,
+          "std": 773.69,
+          "samples": [
+            123571.91,
+            125563.61,
+            125281.83,
+            124522.92,
+            124617.75
+          ],
+          "better": "higher"
+        },
+        "udp-64b-multi.pps": {
+          "value": 223180.48,
+          "std": 2901.44,
+          "samples": [
+            227243.48,
+            222724.11,
+            220462.78,
+            224878.01,
+            220594.02
+          ],
+          "better": "higher"
+        }
+      },
+      "syscall": {
+        "usecs_op": {
+          "value": 0.45,
+          "std": 0.0,
+          "samples": [
+            0.45,
+            0.44,
+            0.45,
+            0.45,
+            0.45
+          ],
+          "better": "lower"
+        }
+      },
+      "perf-sched": {
+        "usecs_op": {
+          "value": 6.22,
+          "std": 0.41,
+          "samples": [
+            5.78,
+            5.96,
+            6.34,
+            6.85,
+            6.16
+          ],
+          "better": "lower"
+        }
+      },
+      "ipc": {
+        "total_s": {
+          "value": 6.84,
+          "std": 0.05,
+          "samples": [
+            6.78,
+            6.83,
+            6.91,
+            6.83,
+            6.84
+          ],
+          "better": "lower"
+        }
+      },
+      "pagefault": {
+        "bogo_ops_s": {
+          "value": 20751.17,
+          "std": 272.33,
+          "samples": [
+            20627.73,
+            21069.1,
+            21020.71,
+            20515.44,
+            20522.89
+          ],
+          "better": "higher"
+        }
+      },
+      "fork": {
+        "bogo_ops_s": {
+          "value": 1623.9,
+          "std": 54.8,
+          "samples": [
+            1602.71,
+            1695.99,
+            1646.19,
+            1547.35,
+            1627.25
+          ],
+          "better": "higher"
+        }
+      }
+    },
+    "skipped": {}
   }
 }
