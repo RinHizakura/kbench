@@ -60,13 +60,16 @@ def bench_fio():
     return out
 
 def bench_schbench():
-    """Scheduler wakeup latency p50/p99/p99.9 + avg rps."""
+    """Scheduler wakeup + request latency p50/p99/p99.9 + avg rps."""
     r = run_bench(["schbench", "-m", "2", "-t", NPROC, "-r", "30"])
     text = r.stdout + r.stderr  # schbench prints to stderr
     out = {}
-    for pct, val in re.findall(r"\*?\s*(\d+\.\d)th:\s+(\d+)", text):  # old + new output formats
-        if pct in ("50.0", "99.0", "99.9") and f"p{pct}_us" not in out:
-            out[f"p{pct}_us"] = (int(val), "lower")
+    wake, _, req = text.partition("Request Latencies")  # old format: no marker -> req empty
+    req = req.partition("RPS percentiles")[0]
+    for prefix, block in (("", wake), ("req_", req)):
+        for pct, val in re.findall(r"\*?\s*(\d+\.\d)th:\s+(\d+)", block):
+            if pct in ("50.0", "99.0", "99.9") and f"{prefix}p{pct}_us" not in out:
+                out[f"{prefix}p{pct}_us"] = (int(val), "lower")
     out["avg_rps"] = (parse(r"average rps:\s+([\d.]+)", r, "schbench rps"), "higher")
     return out
 
