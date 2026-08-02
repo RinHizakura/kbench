@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """kbench — kernel regression benchmark runner.
 
-    ./kbench.py run [bench...] [-o PLATFORM]   # append a run to data/PLATFORM.json
+    ./kbench.py run [bench...] [-o PLATFORM]   # append a run to data/PLATFORM.json (default: all but fio)
     ./kbench.py list [-o PLATFORM]             # list saved runs
     ./kbench.py rm <run> [-o PLATFORM]         # delete one run
 """
@@ -172,6 +172,7 @@ def save_data(data):
 # --- commands ---
 
 def cmd_run(only=None):
+    only = only or [n for n in BENCHMARKS if n != "fio"]  # fio only runs when asked explicitly
     result = {"sysinfo": sysinfo(), "benchmarks": {}, "skipped": {}}
     for name, b in BENCHMARKS.items():
         if only and name not in only:
