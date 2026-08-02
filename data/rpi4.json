@@ -8,7 +8,7 @@
     },
     "benchmarks": {
       "schbench": {
-        "p50.0_us": {
+        "wake_p50.0_us": {
           "value": 730.2,
           "std": 176.11,
           "samples": [
@@ -20,7 +20,7 @@
           ],
           "better": "lower"
         },
-        "p99.0_us": {
+        "wake_p99.0_us": {
           "value": 3175.2,
           "std": 65.39,
           "samples": [
@@ -32,7 +32,7 @@
           ],
           "better": "lower"
         },
-        "p99.9_us": {
+        "wake_p99.9_us": {
           "value": 4936,
           "std": 320.6,
           "samples": [
@@ -215,7 +215,7 @@
     },
     "benchmarks": {
       "schbench": {
-        "p50.0_us": {
+        "wake_p50.0_us": {
           "value": 3916.8,
           "std": 633.53,
           "samples": [
@@ -227,7 +227,7 @@
           ],
           "better": "lower"
         },
-        "p99.0_us": {
+        "wake_p99.0_us": {
           "value": 6572.8,
           "std": 1164.67,
           "samples": [
@@ -239,7 +239,7 @@
           ],
           "better": "lower"
         },
-        "p99.9_us": {
+        "wake_p99.9_us": {
           "value": 9904,
           "std": 2043.37,
           "samples": [

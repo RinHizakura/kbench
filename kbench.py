@@ -66,7 +66,7 @@ def bench_schbench():
     out = {}
     wake, _, req = text.partition("Request Latencies")  # old format: no marker -> req empty
     req = req.partition("RPS percentiles")[0]
-    for prefix, block in (("", wake), ("req_", req)):
+    for prefix, block in (("wake_", wake), ("req_", req)):
         for pct, val in re.findall(r"\*?\s*(\d+\.\d)th:\s+(\d+)", block):
             if pct in ("50.0", "99.0", "99.9") and f"{prefix}p{pct}_us" not in out:
                 out[f"{prefix}p{pct}_us"] = (int(val), "lower")
