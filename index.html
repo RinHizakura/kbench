@@ -95,10 +95,14 @@ function render() {
                        - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x); };
         const conf = erf(Math.abs(m.value - bm.value) / (se || 1e-12) / Math.SQRT2);
         const sig = conf > 0.95;
-        const worse = sig && (m.better === "higher" ? d < -THRESHOLD : d > THRESHOLD);
-        const better = sig && (m.better === "higher" ? d > THRESHOLD : d < -THRESHOLD);
-        const cls = worse ? "reg" : better ? "imp" : sig ? "" : "ins";
-        const st = worse ? "REGRESSION" : better ? "improved"
+        // schbench-heavy is saturated: wake latency reads back preemption granularity,
+        // not scheduler quality — informational only, never REGRESSION.
+        // (schbench-light runs underloaded; its wake metrics stay first-class.)
+        const diag = bench === "schbench-heavy" && metric.startsWith("wake_");
+        const worse = !diag && sig && (m.better === "higher" ? d < -THRESHOLD : d > THRESHOLD);
+        const better = !diag && sig && (m.better === "higher" ? d > THRESHOLD : d < -THRESHOLD);
+        const cls = worse ? "reg" : better ? "imp" : diag || !sig ? "ins" : "";
+        const st = worse ? "REGRESSION" : better ? "improved" : diag ? "info"
                  : !sig ? (Math.abs(d) > THRESHOLD ? "noise" : "–") : "ok";
         cells = `<td class="num">${fmt(bm)}</td>` + cells +
                 `<td class="num ${cls}">${d > 0 ? "+" : ""}${d.toFixed(1)}%</td>` +

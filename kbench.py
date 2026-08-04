@@ -11,7 +11,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 PREFIX = "runs"  # -o overrides; data lands in data/<PREFIX>.json
-NPROC = str(os.cpu_count() or 4)
+NPROC = os.cpu_count()
 REPEAT = 5  # iterations per benchmark, aggregated to mean+std
 
 # Each bench_* returns {metric: (value, "higher"|"lower")}; aggregate() folds
@@ -59,9 +59,9 @@ def bench_fio():
     testfile.unlink(missing_ok=True)
     return out
 
-def bench_schbench():
+def _bench_schbench(mthreads, workers):
     """Scheduler wakeup + request latency p50/p99/p99.9 + avg rps."""
-    r = run_bench(["schbench", "-m", "2", "-t", NPROC, "-r", "30"])
+    r = run_bench(["schbench", "-m", mthreads, "-t", str(workers), "-r", "30"])
     text = r.stdout + r.stderr  # schbench prints to stderr
     out = {}
     wake, _, req = text.partition("Request Latencies")  # old format: no marker -> req empty
@@ -72,6 +72,15 @@ def bench_schbench():
                 out[f"{prefix}p{pct}_us"] = (int(val), "lower")
     out["avg_rps"] = (parse(r"average rps:\s+([\d.]+)", r, "schbench rps"), "higher")
     return out
+
+def bench_schbench_heavy():
+    """2x oversubscribed (CPU saturated): rps + req latency are the meaningful
+    metrics, wake latency just reads back preemption granularity."""
+    return _bench_schbench(2, NPROC)
+
+def bench_schbench_light():
+    """Underloaded (N/2 workers): wake latency measures scheduler responsiveness."""
+    return _bench_schbench(1, max(1, NPROC // 2))
 
 def bench_memory():
     """Memory bandwidth via sysbench (1M blocks)."""
@@ -124,7 +133,8 @@ def _stressng(stressor):
 
 BENCHMARKS = {
     "fio":        {"needs": "fio",       "fn": bench_fio},
-    "schbench":   {"needs": "schbench",  "fn": bench_schbench},
+    "schbench-heavy": {"needs": "schbench", "fn": bench_schbench_heavy},
+    "schbench-light": {"needs": "schbench", "fn": bench_schbench_light},
     "memory":     {"needs": "sysbench",  "fn": bench_memory},
     "net":        {"needs": "iperf3",    "fn": bench_net},
     "syscall":    {"needs": "perf",      "fn": lambda: _perf_usecs("syscall", "basic")},
