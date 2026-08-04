@@ -18,8 +18,9 @@ REPEAT = 5  # iterations per benchmark, aggregated to mean+std
 # REPEAT of those into the stored {metric: {value, std, better}} form.
 
 def run_bench(cmd, **kw):
-    """Every benchmark command goes through here: print it, run it,
-    raise on failure, return the finished process."""
+    """Every benchmark command goes through here: stringify args, print it,
+    run it, raise on failure, return the finished process."""
+    cmd = [str(c) for c in cmd]
     print("       " + " ".join(cmd), flush=True)
     r = subprocess.run(cmd, capture_output=True, text=True, **kw)
     if r.returncode:
@@ -61,7 +62,7 @@ def bench_fio():
 
 def _bench_schbench(mthreads, workers):
     """Scheduler wakeup + request latency p50/p99/p99.9 + avg rps."""
-    r = run_bench(["schbench", "-m", mthreads, "-t", str(workers), "-r", "30"])
+    r = run_bench(["schbench", "-m", mthreads, "-t", workers, "-r", "30"])
     text = r.stdout + r.stderr  # schbench prints to stderr
     out = {}
     wake, _, req = text.partition("Request Latencies")  # old format: no marker -> req empty
