@@ -134,8 +134,8 @@ def _stressng(stressor):
 
 BENCHMARKS = {
     "fio":        {"needs": "fio",       "fn": bench_fio},
-    "schbench-heavy": {"needs": "schbench", "fn": bench_schbench_heavy},
-    "schbench-light": {"needs": "schbench", "fn": bench_schbench_light},
+    "schbench-heavy": {"needs": "schbench", "fn": bench_schbench_heavy, "repeat": 10},
+    "schbench-light": {"needs": "schbench", "fn": bench_schbench_light, "repeat": 10},
     "memory":     {"needs": "sysbench",  "fn": bench_memory},
     "net":        {"needs": "iperf3",    "fn": bench_net},
     "syscall":    {"needs": "perf",      "fn": lambda: _perf_usecs("syscall", "basic")},
@@ -195,8 +195,9 @@ def cmd_run(only=None):
         t0 = time.time()
         try:
             runs = []
-            for i in range(REPEAT):
-                print(f"RUN  {name} ({i + 1}/{REPEAT}) ...", flush=True)
+            repeat = b.get("repeat", REPEAT)
+            for i in range(repeat):
+                print(f"RUN  {name} ({i + 1}/{repeat}) ...", flush=True)
                 runs.append(b["fn"]())
                 print("     -> " + "  ".join(f"{k}={round(v, 2)}" for k, (v, _) in runs[-1].items()), flush=True)
             result["benchmarks"][name] = aggregate(runs)
