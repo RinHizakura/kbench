@@ -62,7 +62,8 @@ def bench_fio():
 
 def _bench_schbench(mthreads, workers):
     """Scheduler wakeup + request latency p50/p99/p99.9 + avg rps."""
-    r = run_bench(["schbench", "-m", mthreads, "-t", workers, "-r", "30"])
+    # long runtime + warmup: p99/p99.9 need many requests per run to converge
+    r = run_bench(["schbench", "-m", mthreads, "-t", workers, "-r", "120", "-w", "5"])
     text = r.stdout + r.stderr  # schbench prints to stderr
     out = {}
     wake, _, req = text.partition("Request Latencies")  # old format: no marker -> req empty
@@ -134,8 +135,8 @@ def _stressng(stressor):
 
 BENCHMARKS = {
     "fio":        {"needs": "fio",       "fn": bench_fio},
-    "schbench-heavy": {"needs": "schbench", "fn": bench_schbench_heavy, "repeat": 10},
-    "schbench-light": {"needs": "schbench", "fn": bench_schbench_light, "repeat": 10},
+    "schbench-heavy": {"needs": "schbench", "fn": bench_schbench_heavy},
+    "schbench-light": {"needs": "schbench", "fn": bench_schbench_light},
     "memory":     {"needs": "sysbench",  "fn": bench_memory},
     "net":        {"needs": "iperf3",    "fn": bench_net},
     "syscall":    {"needs": "perf",      "fn": lambda: _perf_usecs("syscall", "basic")},
