@@ -81,6 +81,11 @@ function render() {
     + (m.std ? ` <span class="sys">±${m.std}</span>` : "");
   for (const [bench, metric, m] of metrics(cur)) {
     if ($("bench").value && bench !== $("bench").value) continue;
+    // schbench-heavy is saturated: rps + req latency are meaningful, wake latency
+    // just reads back preemption granularity. schbench-light is underloaded: wake
+    // latency measures scheduler responsiveness, req/rps just reflect offered load.
+    if (bench === "schbench-heavy" && metric.startsWith("wake_")) continue;
+    if (bench === "schbench-light" && !metric.startsWith("wake_")) continue;
     const bm = base?.benchmarks[bench]?.[metric];
     let cells = `<td class="num">${fmt(m)}</td>`;
     if (base) {
@@ -95,14 +100,10 @@ function render() {
                        - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x); };
         const conf = erf(Math.abs(m.value - bm.value) / (se || 1e-12) / Math.SQRT2);
         const sig = conf > 0.95;
-        // schbench-heavy is saturated: wake latency reads back preemption granularity,
-        // not scheduler quality — informational only, never REGRESSION.
-        // (schbench-light runs underloaded; its wake metrics stay first-class.)
-        const diag = bench === "schbench-heavy" && metric.startsWith("wake_");
-        const worse = !diag && sig && (m.better === "higher" ? d < -THRESHOLD : d > THRESHOLD);
-        const better = !diag && sig && (m.better === "higher" ? d > THRESHOLD : d < -THRESHOLD);
-        const cls = worse ? "reg" : better ? "imp" : diag || !sig ? "ins" : "";
-        const st = worse ? "REGRESSION" : better ? "improved" : diag ? "info"
+        const worse = sig && (m.better === "higher" ? d < -THRESHOLD : d > THRESHOLD);
+        const better = sig && (m.better === "higher" ? d > THRESHOLD : d < -THRESHOLD);
+        const cls = worse ? "reg" : better ? "imp" : !sig ? "ins" : "";
+        const st = worse ? "REGRESSION" : better ? "improved"
                  : !sig ? (Math.abs(d) > THRESHOLD ? "noise" : "–") : "ok";
         cells = `<td class="num">${fmt(bm)}</td>` + cells +
                 `<td class="num ${cls}">${d > 0 ? "+" : ""}${d.toFixed(1)}%</td>` +
