@@ -85,12 +85,15 @@ def bench_schbench_light():
     return _bench_schbench(1, max(1, NPROC // 2))
 
 def bench_memory():
-    """Memory bandwidth via sysbench (1M blocks)."""
+    """Memory bandwidth via sysbench: 256K block (cache regime) + 64M (DRAM regime).
+    1M blocks sit exactly on the RPi4 L2 size, where page-coloring luck swings
+    results by ±15% per run; these two sizes are stable to <1%."""
     out = {}
-    for op in ("read", "write"):
-        r = run_bench(["sysbench", "memory", "--memory-block-size=1M",
-                       "--memory-total-size=20G", f"--memory-oper={op}", "run"])
-        out[f"{op}.bw_mibps"] = (parse(r"\(([\d.]+) MiB/sec\)", r, f"sysbench {op}"), "higher")
+    for blk in ("256K", "64M"):
+        for op in ("read", "write"):
+            r = run_bench(["sysbench", "memory", f"--memory-block-size={blk}",
+                           "--memory-total-size=20G", f"--memory-oper={op}", "run"])
+            out[f"{op}-{blk.lower()}.bw_mibps"] = (parse(r"\(([\d.]+) MiB/sec\)", r, f"sysbench {op}"), "higher")
     return out
 
 def bench_net():
