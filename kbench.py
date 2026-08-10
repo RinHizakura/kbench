@@ -162,6 +162,30 @@ def aggregate(runs):
 
 # --- sysinfo ---
 
+def hwinfo():
+    """Fixed hardware facts (don't change with the kernel): board model,
+    cpu count, memory size, cache hierarchy. Rewritten on every run."""
+    info = {"arch": os.uname().machine, "cpus": NPROC}
+    for p in ("/proc/device-tree/model", "/sys/devices/virtual/dmi/id/product_name"):
+        try:
+            info["model"] = Path(p).read_bytes().decode().strip("\x00\n ")
+            break
+        except OSError:
+            pass
+    m = re.search(r"MemTotal:\s+(\d+)", Path("/proc/meminfo").read_text())
+    info["mem_mib"] = round(int(m.group(1)) / 1024)
+    caches = {}
+    for idx in sorted(Path("/sys/devices/system/cpu/cpu0/cache").glob("index*")):
+        try:
+            rd = lambda f: (idx / f).read_text().strip()
+            level = f"L{rd('level')}" + {"Data": "d", "Instruction": "i"}.get(rd("type"), "")
+            caches[level] = f"{rd('size')} (cpus {rd('shared_cpu_list')})"
+        except OSError:
+            pass
+    if caches:
+        info["caches"] = caches
+    return info
+
 def sysinfo():
     info = {"kernel": os.uname().release, "date": datetime.now().isoformat(timespec="seconds")}
     for name, path in [("cmdline", "/proc/cmdline"),
@@ -214,6 +238,7 @@ def cmd_run(only=None):
     run_name = f"{result['sysinfo']['kernel']}_n{max(nums, default=0) + 1}"
     data[run_name] = result
     save_data(data)
+    (data_path().parent / f"{PREFIX}.hw.json").write_text(json.dumps(hwinfo(), indent=2))
     print(f"\nsaved {run_name} in {data_path().relative_to(ROOT)}")
     pf = data_path().parent / "platforms.json"
     plats = json.loads(pf.read_text()) if pf.exists() else []

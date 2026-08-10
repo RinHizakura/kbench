@@ -26,6 +26,7 @@
   <label>result <select id="cur"></select></label>
   <label>compare with <select id="base"></select></label>
   <label>benchmark <select id="bench"></select></label>
+  <a id="hwlink" href="platform.html">platform info</a>
 </p>
 <div id="sys"></div>
 <div id="out"></div>
@@ -39,6 +40,7 @@ const plat = q.get("platform") ?? platforms[0];
 for (const p of platforms) $("plat").add(new Option(p, p));
 $("plat").value = plat;
 $("plat").onchange = () => location.search = "?platform=" + encodeURIComponent($("plat").value);
+$("hwlink").href = "platform.html?platform=" + encodeURIComponent(plat);
 const DATA = await (await fetch(`data/${plat}.json`, opts)).json();
 const names = Object.keys(DATA).sort((a, b) => DATA[b].sysinfo.date.localeCompare(DATA[a].sysinfo.date));  // newest first
 for (const n of names) $("cur").add(new Option(n, n));
