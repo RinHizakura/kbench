@@ -179,8 +179,8 @@
           "better": "higher"
         }
       },
-      "memory": {
-        "read-256k.bw_mibps": {
+      "memory-256k": {
+        "read.bw_mibps": {
           "value": 11152.19,
           "std": 483.65,
           "samples": [
@@ -192,7 +192,7 @@
           ],
           "better": "higher"
         },
-        "write-256k.bw_mibps": {
+        "write.bw_mibps": {
           "value": 7794.47,
           "std": 271.71,
           "samples": [
@@ -203,8 +203,10 @@
             7890.1
           ],
           "better": "higher"
-        },
-        "read-64m.bw_mibps": {
+        }
+      },
+      "memory-64m": {
+        "read.bw_mibps": {
           "value": 3798.43,
           "std": 170.19,
           "samples": [
@@ -216,7 +218,7 @@
           ],
           "better": "higher"
         },
-        "write-64m.bw_mibps": {
+        "write.bw_mibps": {
           "value": 2966.93,
           "std": 4.18,
           "samples": [
@@ -532,8 +534,8 @@
           "better": "higher"
         }
       },
-      "memory": {
-        "read-256k.bw_mibps": {
+      "memory-256k": {
+        "read.bw_mibps": {
           "value": 11405.96,
           "std": 215.95,
           "samples": [
@@ -545,7 +547,7 @@
           ],
           "better": "higher"
         },
-        "write-256k.bw_mibps": {
+        "write.bw_mibps": {
           "value": 7113.69,
           "std": 162.15,
           "samples": [
@@ -556,8 +558,10 @@
             6834.18
           ],
           "better": "higher"
-        },
-        "read-64m.bw_mibps": {
+        }
+      },
+      "memory-64m": {
+        "read.bw_mibps": {
           "value": 3992.43,
           "std": 4.17,
           "samples": [
@@ -569,7 +573,7 @@
           ],
           "better": "higher"
         },
-        "write-64m.bw_mibps": {
+        "write.bw_mibps": {
           "value": 2988.12,
           "std": 8.69,
           "samples": [
