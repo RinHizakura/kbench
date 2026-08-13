@@ -4,7 +4,8 @@
       "kernel": "7.0.0-1015-raspi",
       "date": "2026-08-05T00:01:56",
       "cmdline": "coherent_pool=1M 8250.nr_uarts=1 snd_bcm2835.enable_headphones=0 numa_policy=interleave nvme.max_host_mem_size_mb=0 snd_bcm2835.enable_headphones=1 snd_bcm2835.enable_hdmi=1 snd_bcm2835.enable_hdmi=0  numa=fake=2 system_heap.max_order=0 iommu_dma_numa_policy=interleave smsc95xx.macaddr=D8:3A:DD:0A:CC:5F vc_mem.mem_base=0x3ec00000 vc_mem.mem_size=0x40000000  multipath=off dwc_otg.lpm_enable=0 console=tty1 root=LABEL=writable rootfstype=ext4 panic=10 rootwait fixrtc console=ttyAMA0,115200",
-      "governor": "ondemand"
+      "governor": "ondemand",
+      "config": "dc2eaebd5d17"
     },
     "benchmarks": {
       "schbench-heavy": {
@@ -359,7 +360,8 @@
       "kernel": "7.0.0-rc7-gf2832323-591cd656",
       "date": "2026-08-14T00:23:24",
       "cmdline": "dma.dmachans=0x37f5 bcm2709.boardrev=0xd03115 bcm2709.serial=0x9d714099 bcm2709.uart_clock=48000000 bcm2709.disk_led_gpio=42 bcm2709.disk_led_active_low=0 smsc95xx.macaddr=D8:3A:DD:0A:CC:5F vc_mem.mem_base=0x3ec00000 vc_mem.mem_size=0x40000000  multipath=off dwc_otg.lpm_enable=0 console=tty1 root=LABEL=writable rootfstype=ext4 panic=10 rootwait fixrtc console=ttyS1,115200",
-      "governor": "schedutil"
+      "governor": "schedutil",
+      "config": "aec76f08318c"
     },
     "benchmarks": {
       "schbench-heavy": {

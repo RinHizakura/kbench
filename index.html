@@ -15,8 +15,9 @@
   .imp { color: #1e8449; }
   .ins { color: #999; }
   .sys { color: #666; font-size: .85rem; margin: .3rem 0; overflow-wrap: anywhere; }
-  #sys table { font-size: .85rem; color: #444; }
-  #sys td { overflow-wrap: anywhere; }
+  #sys table, #cfg table { font-size: .85rem; color: #444; }
+  #sys td, #cfg td { overflow-wrap: anywhere; }
+  #cfg summary { font-size: .85rem; color: #666; cursor: pointer; margin-top: .5rem; }
   td.diff { background: #fff3cd; }
   td span[title] { text-decoration: underline dotted #999; cursor: help; }
 </style>
@@ -29,6 +30,7 @@
   <a id="hwlink" href="platform.html">platform info</a>
 </p>
 <div id="sys"></div>
+<div id="cfg"></div>
 <div id="out"></div>
 <script type="module">
 const THRESHOLD = 5;  // flag as regression if worse than baseline by this %
@@ -75,9 +77,40 @@ function sysTable(cur, base) {
   return `<table>${head}${rows}</table>`;
 }
 
+// kernel configs are stored deduped as data/configs/<hash>.config; sysinfo only
+// holds the hash. When cur and base hashes differ, fetch both and list the
+// options that changed (set lines + "# CONFIG_X is not set" lines).
+let cfgSeq = 0;
+async function cfgDiff(cur, base) {
+  $("cfg").innerHTML = "";
+  const ch = cur.sysinfo.config, bh = base?.sysinfo.config;
+  if (!ch || !bh || ch === bh) return;
+  const seq = ++cfgSeq;
+  const load = async h => {
+    const r = await fetch(`data/configs/${h}.config`, opts);
+    const m = new Map();
+    if (!r.ok) return m;
+    for (const line of (await r.text()).split("\n")) {
+      const set = line.match(/^(CONFIG_\w+)=(.*)/), unset = line.match(/^# (CONFIG_\w+) is not set/);
+      if (set) m.set(set[1], set[2]); else if (unset) m.set(unset[1], "n");
+    }
+    return m;
+  };
+  const [mb, mc] = await Promise.all([load(bh), load(ch)]);
+  if (seq !== cfgSeq) return;  // a newer selection superseded this fetch
+  if (!mb.size || !mc.size) return $("cfg").innerHTML = `<p class="sys">config file missing for ${mb.size ? ch : bh}</p>`;
+  const keys = [...new Set([...mb.keys(), ...mc.keys()])].filter(k => mb.get(k) !== mc.get(k)).sort();
+  if (!keys.length) return $("cfg").innerHTML = `<p class="sys">configs differ only in comments</p>`;
+  const rows = keys.map(k =>
+    `<tr><td>${k}</td><td>${mb.get(k) ?? "–"}</td><td>${mc.get(k) ?? "–"}</td></tr>`).join("");
+  $("cfg").innerHTML = `<details><summary>kernel config diff: ${keys.length} options</summary>` +
+    `<table><tr><th>option</th><th>baseline</th><th>current</th></tr>${rows}</table></details>`;
+}
+
 function render() {
   const cur = DATA[$("cur").value], base = DATA[$("base").value] || null;
   $("sys").innerHTML = sysTable(cur, base);
+  cfgDiff(cur, base);
   let rows = "";
   const fmt = m => (m.samples ? `<span title="runs: ${m.samples.join(", ")}">${m.value}</span>` : m.value)
     + (m.std ? ` <span class="sys">±${m.std}</span>` : "");

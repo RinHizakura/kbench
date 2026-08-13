@@ -5,7 +5,7 @@
     ./kbench.py list [-o PLATFORM]             # list saved runs
     ./kbench.py rm <run> [-o PLATFORM]         # delete one run
 """
-import json, os, re, shutil, statistics, subprocess, sys, time
+import gzip, hashlib, json, os, re, shutil, statistics, subprocess, sys, time
 from datetime import datetime
 from pathlib import Path
 
@@ -186,6 +186,17 @@ def hwinfo():
         info["caches"] = caches
     return info
 
+def kconfig():
+    """Running kernel's config text, or None (needs CONFIG_IKCONFIG_PROC or /boot/config-*)."""
+    try:
+        return gzip.decompress(Path("/proc/config.gz").read_bytes()).decode()
+    except OSError:
+        pass
+    try:
+        return Path(f"/boot/config-{os.uname().release}").read_text()
+    except OSError:
+        return None
+
 def sysinfo():
     info = {"kernel": os.uname().release, "date": datetime.now().isoformat(timespec="seconds")}
     for name, path in [("cmdline", "/proc/cmdline"),
@@ -194,6 +205,14 @@ def sysinfo():
             info[name] = Path(path).read_text().strip()
         except OSError:
             pass
+    # full config lives in data/configs/<hash>.config (deduped by content);
+    # runs only store the hash, so rpi4.json stays small
+    if cfg := kconfig():
+        h = hashlib.sha256(cfg.encode()).hexdigest()[:12]
+        d = ROOT / "data" / "configs"
+        d.mkdir(parents=True, exist_ok=True)
+        (d / f"{h}.config").write_text(cfg)
+        info["config"] = h
     return info
 
 # --- storage: one json per platform under data/, keyed by run name ---
