@@ -5,8 +5,10 @@
 <style>
   body { font: 15px/1.5 system-ui, sans-serif; max-width: 60rem; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
   h1 { font-size: 1.4rem; }
-  select { font: inherit; padding: .2rem; max-width: 100%; }
-  label { margin-right: 1.5rem; }
+  .bar { display: flex; flex-wrap: wrap; gap: .6rem 1.2rem; align-items: end; }
+  .bar label { display: flex; flex-direction: column; gap: .15rem; font-size: .8rem; color: #666; }
+  .bar a { padding-bottom: .2rem; white-space: nowrap; }
+  select { font: 15px/1.4 system-ui, sans-serif; padding: .2rem; max-width: 100%; }
   table { border-collapse: collapse; margin-top: 1rem; width: 100%; }
   th, td { text-align: left; padding: .35rem .7rem; border-bottom: 1px solid #ddd; }
   th { border-bottom: 2px solid #999; }
@@ -22,9 +24,9 @@
   td span[title] { text-decoration: underline dotted #999; cursor: help; }
 </style>
 <h1>kbench report</h1>
-<p>
+<p class="bar">
   <label>platform <select id="plat"></select></label>
-  <label>result <select id="cur"></select></label>
+  <label>current <select id="cur"></select></label>
   <label>compare with <select id="base"></select></label>
   <label>benchmark <select id="bench"></select></label>
   <a id="hwlink" href="platform.html">platform info</a>
@@ -65,14 +67,14 @@ function metrics(r) {
 function sysTable(cur, base) {
   const keys = [...new Set([...Object.keys(cur.sysinfo), ...(base ? Object.keys(base.sysinfo) : [])])];
   const head = base
-    ? "<tr><th>sysinfo</th><th>baseline</th><th>current</th></tr>"
+    ? "<tr><th>sysinfo</th><th>current</th><th>compare with</th></tr>"
     : "<tr><th>sysinfo</th><th>value</th></tr>";
   const rows = keys.map(k => {
     const cv = cur.sysinfo[k] ?? "–";
     if (!base) return `<tr><td>${k}</td><td>${cv}</td></tr>`;
     const bv = base.sysinfo[k] ?? "–";
     const cls = bv !== cv && k !== "date" ? ' class="diff"' : "";
-    return `<tr><td>${k}</td><td${cls}>${bv}</td><td${cls}>${cv}</td></tr>`;
+    return `<tr><td>${k}</td><td${cls}>${cv}</td><td${cls}>${bv}</td></tr>`;
   }).join("");
   return `<table>${head}${rows}</table>`;
 }
@@ -102,9 +104,9 @@ async function cfgDiff(cur, base) {
   const keys = [...new Set([...mb.keys(), ...mc.keys()])].filter(k => mb.get(k) !== mc.get(k)).sort();
   if (!keys.length) return $("cfg").innerHTML = `<p class="sys">configs differ only in comments</p>`;
   const rows = keys.map(k =>
-    `<tr><td>${k}</td><td>${mb.get(k) ?? "–"}</td><td>${mc.get(k) ?? "–"}</td></tr>`).join("");
+    `<tr><td>${k}</td><td>${mc.get(k) ?? "–"}</td><td>${mb.get(k) ?? "–"}</td></tr>`).join("");
   $("cfg").innerHTML = `<details><summary>kernel config diff: ${keys.length} options</summary>` +
-    `<table><tr><th>option</th><th>baseline</th><th>current</th></tr>${rows}</table></details>`;
+    `<table><tr><th>option</th><th>current</th><th>compare with</th></tr>${rows}</table></details>`;
 }
 
 function render() {
@@ -140,17 +142,17 @@ function render() {
         const cls = worse ? "reg" : better ? "imp" : !sig ? "ins" : "";
         const st = worse ? "REGRESSION" : better ? "improved"
                  : !sig ? (Math.abs(d) > THRESHOLD ? "unconfirmed" : "–") : "ok";
-        cells = `<td class="num">${fmt(bm)}</td>` + cells +
+        cells = cells + `<td class="num">${fmt(bm)}</td>` +
                 `<td class="num ${cls}">${d > 0 ? "+" : ""}${d.toFixed(1)}%</td>` +
                 `<td class="num ${cls}">${(conf * 100).toFixed(0)}%</td><td class="${cls}">${st}</td>`;
       } else {
-        cells = `<td class="num">–</td>` + cells + `<td class="num"></td><td class="num"></td><td>new</td>`;
+        cells = cells + `<td class="num">–</td><td class="num"></td><td class="num"></td><td>new</td>`;
       }
     }
     rows += `<tr><td>${bench}</td><td>${metric}</td>${cells}</tr>`;
   }
   const head = base
-    ? "<tr><th>benchmark</th><th>metric</th><th>baseline</th><th>current</th><th>delta</th><th>confidence</th><th>status</th></tr>"
+    ? "<tr><th>benchmark</th><th>metric</th><th>current</th><th>compare with</th><th>delta</th><th>confidence</th><th>status</th></tr>"
     : "<tr><th>benchmark</th><th>metric</th><th>value</th></tr>";
   const skipped = Object.entries(cur.skipped || {})
     .map(([n, why]) => `<p class="sys">skipped ${n}: ${why}</p>`).join("");
