@@ -205,11 +205,11 @@ def sysinfo():
             info[name] = Path(path).read_text().strip()
         except OSError:
             pass
-    # full config lives in data/configs/<hash>.config (deduped by content);
-    # runs only store the hash, so rpi4.json stays small
+    # full config lives in data/configs/<platform>/<hash>.config (deduped by
+    # content); runs only store the hash, so rpi4.json stays small
     if cfg := kconfig():
         h = hashlib.sha256(cfg.encode()).hexdigest()[:12]
-        d = ROOT / "data" / "configs"
+        d = ROOT / "data" / "configs" / PREFIX
         d.mkdir(parents=True, exist_ok=True)
         (d / f"{h}.config").write_text(cfg)
         info["config"] = h
