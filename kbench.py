@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """kbench — kernel regression benchmark runner.
 
-    ./kbench.py run [bench...] [-o PLATFORM]   # append a run to data/PLATFORM.json (default: all but fio)
+    ./kbench.py run [bench...] [-o PLATFORM]   # append a run to data/PLATFORM/results.json (default: all but fio)
     ./kbench.py list [-o PLATFORM]             # list saved runs
     ./kbench.py rm <run> [-o PLATFORM]         # delete one run
 """
@@ -10,7 +10,7 @@ from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-PREFIX = "runs"  # -o overrides; data lands in data/<PREFIX>.json
+PREFIX = "runs"  # -o overrides; data lands in data/<PREFIX>/
 NPROC = os.cpu_count()
 REPEAT = 5  # iterations per benchmark, aggregated to mean+std
 
@@ -205,26 +205,26 @@ def sysinfo():
             info[name] = Path(path).read_text().strip()
         except OSError:
             pass
-    # full config lives in data/configs/<platform>/<hash>.config (deduped by
-    # content); runs only store the hash, so rpi4.json stays small
+    # full config lives in data/<platform>/configs/<hash>.config (deduped by
+    # content); runs only store the hash, so results.json stays small
     if cfg := kconfig():
         h = hashlib.sha256(cfg.encode()).hexdigest()[:12]
-        d = ROOT / "data" / "configs" / PREFIX
+        d = ROOT / "data" / PREFIX / "configs"
         d.mkdir(parents=True, exist_ok=True)
         (d / f"{h}.config").write_text(cfg)
         info["config"] = h
     return info
 
-# --- storage: one json per platform under data/, keyed by run name ---
+# --- storage: one dir per platform under data/ (results.json, hw.json, configs/) ---
 
 def data_path():
-    return ROOT / "data" / f"{PREFIX}.json"
+    return ROOT / "data" / PREFIX / "results.json"
 
 def load_data():
     return json.loads(data_path().read_text()) if data_path().exists() else {}
 
 def save_data(data):
-    data_path().parent.mkdir(exist_ok=True)
+    data_path().parent.mkdir(parents=True, exist_ok=True)
     data_path().write_text(json.dumps(data, indent=2))  # indented: meant to be hand-editable
 
 # --- commands ---
@@ -257,9 +257,9 @@ def cmd_run(only=None):
     run_name = f"{result['sysinfo']['kernel']}_n{max(nums, default=0) + 1}"
     data[run_name] = result
     save_data(data)
-    (data_path().parent / f"{PREFIX}.hw.json").write_text(json.dumps(hwinfo(), indent=2))
+    (data_path().parent / "hw.json").write_text(json.dumps(hwinfo(), indent=2))
     print(f"\nsaved {run_name} in {data_path().relative_to(ROOT)}")
-    pf = data_path().parent / "platforms.json"
+    pf = ROOT / "data" / "platforms.json"
     plats = json.loads(pf.read_text()) if pf.exists() else []
     if PREFIX not in plats:
         pf.write_text(json.dumps(sorted(plats + [PREFIX])))

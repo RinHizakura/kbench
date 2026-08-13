@@ -43,7 +43,7 @@ for (const p of platforms) $("plat").add(new Option(p, p));
 $("plat").value = plat;
 $("plat").onchange = () => location.search = "?platform=" + encodeURIComponent($("plat").value);
 $("hwlink").href = "platform.html?platform=" + encodeURIComponent(plat);
-const DATA = await (await fetch(`data/${plat}.json`, opts)).json();
+const DATA = await (await fetch(`data/${plat}/results.json`, opts)).json();
 const names = Object.keys(DATA).sort((a, b) => DATA[b].sysinfo.date.localeCompare(DATA[a].sysinfo.date));  // newest first
 for (const n of names) $("cur").add(new Option(n, n));
 $("base").add(new Option("— none —", ""));
@@ -77,7 +77,7 @@ function sysTable(cur, base) {
   return `<table>${head}${rows}</table>`;
 }
 
-// kernel configs are stored deduped as data/configs/<platform>/<hash>.config; sysinfo only
+// kernel configs are stored deduped as data/<platform>/configs/<hash>.config; sysinfo only
 // holds the hash. When cur and base hashes differ, fetch both and list the
 // options that changed (set lines + "# CONFIG_X is not set" lines).
 let cfgSeq = 0;
@@ -87,7 +87,7 @@ async function cfgDiff(cur, base) {
   if (!ch || !bh || ch === bh) return;
   const seq = ++cfgSeq;
   const load = async h => {
-    const r = await fetch(`data/configs/${plat}/${h}.config`, opts);
+    const r = await fetch(`data/${plat}/configs/${h}.config`, opts);
     const m = new Map();
     if (!r.ok) return m;
     for (const line of (await r.text()).split("\n")) {
