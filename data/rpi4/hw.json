@@ -2,7 +2,7 @@
   "arch": "aarch64",
   "cpus": 4,
   "model": "Raspberry Pi 4 Model B Rev 1.5",
-  "mem_mib": 7795,
+  "mem_mib": 7793,
   "caches": {
     "L1d": "32K (cpus 0)",
     "L1i": "48K (cpus 0)",
