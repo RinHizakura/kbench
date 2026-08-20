@@ -354,5 +354,717 @@
       }
     },
     "skipped": {}
+  },
+  "7.2.0-rc7-gb14ddfec-db2ddb87_n2": {
+    "sysinfo": {
+      "kernel": "7.2.0-rc7-gb14ddfec-db2ddb87",
+      "date": "2026-08-20T22:12:39",
+      "cmdline": "dma.dmachans=0x37f5 bcm2709.boardrev=0xd03115 bcm2709.serial=0x9d714099 bcm2709.uart_clock=48000000 bcm2709.disk_led_gpio=42 bcm2709.disk_led_active_low=0 smsc95xx.macaddr=D8:3A:DD:0A:CC:5F vc_mem.mem_base=0x3ec00000 vc_mem.mem_size=0x40000000  multipath=off dwc_otg.lpm_enable=0 console=tty1 root=LABEL=writable rootfstype=ext4 panic=10 rootwait fixrtc console=ttyS1,115200",
+      "governor": "schedutil",
+      "config": "1ff1a6bd1561"
+    },
+    "benchmarks": {
+      "schbench-heavy": {
+        "wake_p50.0_us": {
+          "value": 3410.4,
+          "std": 587.51,
+          "samples": [
+            4004,
+            3996,
+            3124,
+            3284,
+            2644
+          ],
+          "better": "lower"
+        },
+        "wake_p99.0_us": {
+          "value": 5921.6,
+          "std": 64.6,
+          "samples": [
+            5928,
+            5928,
+            5816,
+            5992,
+            5944
+          ],
+          "better": "lower"
+        },
+        "wake_p99.9_us": {
+          "value": 8744,
+          "std": 2844.62,
+          "samples": [
+            12016,
+            11408,
+            6056,
+            8136,
+            6104
+          ],
+          "better": "lower"
+        },
+        "req_p50.0_us": {
+          "value": 44352,
+          "std": 4118.94,
+          "samples": [
+            39616,
+            40256,
+            46144,
+            47296,
+            48448
+          ],
+          "better": "lower"
+        },
+        "req_p99.0_us": {
+          "value": 65728,
+          "std": 10798.66,
+          "samples": [
+            71552,
+            49600,
+            64320,
+            78720,
+            64448
+          ],
+          "better": "lower"
+        },
+        "req_p99.9_us": {
+          "value": 110745.6,
+          "std": 21652.89,
+          "samples": [
+            134912,
+            121984,
+            99200,
+            118144,
+            79488
+          ],
+          "better": "lower"
+        },
+        "avg_rps": {
+          "value": 161.92,
+          "std": 14.9,
+          "samples": [
+            180.49,
+            175.08,
+            155.79,
+            150.78,
+            147.47
+          ],
+          "better": "higher"
+        }
+      },
+      "schbench-light": {
+        "wake_p50.0_us": {
+          "value": 6.4,
+          "std": 0.55,
+          "samples": [
+            6,
+            6,
+            7,
+            7,
+            6
+          ],
+          "better": "lower"
+        },
+        "wake_p99.0_us": {
+          "value": 11,
+          "std": 2.24,
+          "samples": [
+            10,
+            15,
+            10,
+            10,
+            10
+          ],
+          "better": "lower"
+        },
+        "wake_p99.9_us": {
+          "value": 45.2,
+          "std": 36.3,
+          "samples": [
+            104,
+            49,
+            19,
+            42,
+            12
+          ],
+          "better": "lower"
+        },
+        "req_p50.0_us": {
+          "value": 11190.4,
+          "std": 14.31,
+          "samples": [
+            11216,
+            11184,
+            11184,
+            11184,
+            11184
+          ],
+          "better": "lower"
+        },
+        "req_p99.0_us": {
+          "value": 11504,
+          "std": 289.77,
+          "samples": [
+            11696,
+            11920,
+            11280,
+            11344,
+            11280
+          ],
+          "better": "lower"
+        },
+        "req_p99.9_us": {
+          "value": 11676.8,
+          "std": 449.48,
+          "samples": [
+            11728,
+            12432,
+            11312,
+            11504,
+            11408
+          ],
+          "better": "lower"
+        },
+        "avg_rps": {
+          "value": 178.16,
+          "std": 0.12,
+          "samples": [
+            177.96,
+            178.23,
+            178.22,
+            178.19,
+            178.22
+          ],
+          "better": "higher"
+        }
+      },
+      "memory-256k": {
+        "read.bw_mibps": {
+          "value": 11369.18,
+          "std": 204.97,
+          "samples": [
+            11282.94,
+            11735.46,
+            11264.4,
+            11288.97,
+            11274.13
+          ],
+          "better": "higher"
+        },
+        "write.bw_mibps": {
+          "value": 6970.68,
+          "std": 188.74,
+          "samples": [
+            6907.73,
+            6972.69,
+            7138.62,
+            6688.5,
+            7145.88
+          ],
+          "better": "higher"
+        }
+      },
+      "memory-64m": {
+        "read.bw_mibps": {
+          "value": 3967.97,
+          "std": 56.16,
+          "samples": [
+            3867.6,
+            3994.65,
+            3991.77,
+            3995.99,
+            3989.82
+          ],
+          "better": "higher"
+        },
+        "write.bw_mibps": {
+          "value": 2971.43,
+          "std": 28.59,
+          "samples": [
+            2922.94,
+            2983.08,
+            2985.15,
+            2995.77,
+            2970.2
+          ],
+          "better": "higher"
+        }
+      },
+      "net": {
+        "tcp.bw_gbps": {
+          "value": 17.8,
+          "std": 4.45,
+          "samples": [
+            18.83,
+            19.74,
+            19.99,
+            9.92,
+            20.54
+          ],
+          "better": "higher"
+        },
+        "tcp-zc.bw_gbps": {
+          "value": 30.18,
+          "std": 4.68,
+          "samples": [
+            32.16,
+            21.82,
+            32.39,
+            32.74,
+            31.76
+          ],
+          "better": "higher"
+        },
+        "udp-64b.pps": {
+          "value": 124259.46,
+          "std": 621.36,
+          "samples": [
+            124422.08,
+            123305.63,
+            124074.73,
+            124968.5,
+            124526.38
+          ],
+          "better": "higher"
+        },
+        "udp-64b-multi.pps": {
+          "value": 235666.67,
+          "std": 15861.94,
+          "samples": [
+            226582.03,
+            229191.43,
+            263781.5,
+            226870.48,
+            231907.93
+          ],
+          "better": "higher"
+        }
+      },
+      "syscall": {
+        "usecs_op": {
+          "value": 0.46,
+          "std": 0.0,
+          "samples": [
+            0.46,
+            0.46,
+            0.45,
+            0.47,
+            0.45
+          ],
+          "better": "lower"
+        }
+      },
+      "perf-sched": {
+        "usecs_op": {
+          "value": 7.52,
+          "std": 0.28,
+          "samples": [
+            7.86,
+            7.35,
+            7.65,
+            7.6,
+            7.13
+          ],
+          "better": "lower"
+        }
+      },
+      "ipc": {
+        "total_s": {
+          "value": 6.77,
+          "std": 0.04,
+          "samples": [
+            6.7,
+            6.75,
+            6.77,
+            6.79,
+            6.82
+          ],
+          "better": "lower"
+        }
+      },
+      "pagefault": {
+        "bogo_ops_s": {
+          "value": 21150.99,
+          "std": 173.85,
+          "samples": [
+            21213.18,
+            21103.84,
+            21291.04,
+            21277.36,
+            20869.52
+          ],
+          "better": "higher"
+        }
+      },
+      "fork": {
+        "bogo_ops_s": {
+          "value": 1614.63,
+          "std": 28.74,
+          "samples": [
+            1650.51,
+            1640.58,
+            1600.78,
+            1590.49,
+            1590.8
+          ],
+          "better": "higher"
+        }
+      }
+    },
+    "skipped": {}
+  },
+  "7.2.0-rc7-g161fafca-db2ddb87_n3": {
+    "sysinfo": {
+      "kernel": "7.2.0-rc7-g161fafca-db2ddb87",
+      "date": "2026-08-20T23:10:06",
+      "cmdline": "dma.dmachans=0x37f5 bcm2709.boardrev=0xd03115 bcm2709.serial=0x9d714099 bcm2709.uart_clock=48000000 bcm2709.disk_led_gpio=42 bcm2709.disk_led_active_low=0 smsc95xx.macaddr=D8:3A:DD:0A:CC:5F vc_mem.mem_base=0x3ec00000 vc_mem.mem_size=0x40000000  multipath=off dwc_otg.lpm_enable=0 console=tty1 root=LABEL=writable rootfstype=ext4 panic=10 rootwait fixrtc console=ttyS1,115200",
+      "governor": "schedutil",
+      "config": "c989d2afa7e8"
+    },
+    "benchmarks": {
+      "schbench-heavy": {
+        "wake_p50.0_us": {
+          "value": 412.4,
+          "std": 904.27,
+          "samples": [
+            7,
+            7,
+            8,
+            10,
+            2030
+          ],
+          "better": "lower"
+        },
+        "wake_p99.0_us": {
+          "value": 2946.4,
+          "std": 227.36,
+          "samples": [
+            2820,
+            2604,
+            3092,
+            3100,
+            3116
+          ],
+          "better": "lower"
+        },
+        "wake_p99.9_us": {
+          "value": 3996,
+          "std": 1125.2,
+          "samples": [
+            3132,
+            3060,
+            3532,
+            5704,
+            4552
+          ],
+          "better": "lower"
+        },
+        "req_p50.0_us": {
+          "value": 52390.4,
+          "std": 1064.79,
+          "samples": [
+            51904,
+            51904,
+            53440,
+            53568,
+            51136
+          ],
+          "better": "lower"
+        },
+        "req_p99.0_us": {
+          "value": 67225.6,
+          "std": 23807.9,
+          "samples": [
+            54080,
+            52672,
+            56896,
+            109184,
+            63296
+          ],
+          "better": "lower"
+        },
+        "req_p99.9_us": {
+          "value": 91968,
+          "std": 30278.76,
+          "samples": [
+            70784,
+            53824,
+            93056,
+            126848,
+            115328
+          ],
+          "better": "lower"
+        },
+        "avg_rps": {
+          "value": 152.59,
+          "std": 2.65,
+          "samples": [
+            155.43,
+            154.92,
+            152.56,
+            150.9,
+            149.16
+          ],
+          "better": "higher"
+        }
+      },
+      "schbench-light": {
+        "wake_p50.0_us": {
+          "value": 6.2,
+          "std": 0.45,
+          "samples": [
+            6,
+            7,
+            6,
+            6,
+            6
+          ],
+          "better": "lower"
+        },
+        "wake_p99.0_us": {
+          "value": 12,
+          "std": 1.87,
+          "samples": [
+            10,
+            12,
+            11,
+            12,
+            15
+          ],
+          "better": "lower"
+        },
+        "wake_p99.9_us": {
+          "value": 23.6,
+          "std": 14.36,
+          "samples": [
+            14,
+            48,
+            14,
+            17,
+            25
+          ],
+          "better": "lower"
+        },
+        "req_p50.0_us": {
+          "value": 11248,
+          "std": 0.0,
+          "samples": [
+            11248,
+            11248,
+            11248,
+            11248,
+            11248
+          ],
+          "better": "lower"
+        },
+        "req_p99.0_us": {
+          "value": 11600,
+          "std": 315.16,
+          "samples": [
+            11760,
+            11376,
+            11440,
+            11344,
+            12080
+          ],
+          "better": "lower"
+        },
+        "req_p99.9_us": {
+          "value": 12361.6,
+          "std": 1692.59,
+          "samples": [
+            11824,
+            11440,
+            11696,
+            11472,
+            15376
+          ],
+          "better": "lower"
+        },
+        "avg_rps": {
+          "value": 177.54,
+          "std": 0.14,
+          "samples": [
+            177.3,
+            177.64,
+            177.61,
+            177.6,
+            177.57
+          ],
+          "better": "higher"
+        }
+      },
+      "memory-256k": {
+        "read.bw_mibps": {
+          "value": 11226.6,
+          "std": 15.12,
+          "samples": [
+            11238.63,
+            11230.23,
+            11233.77,
+            11200.27,
+            11230.08
+          ],
+          "better": "higher"
+        },
+        "write.bw_mibps": {
+          "value": 7855.48,
+          "std": 148.98,
+          "samples": [
+            7974.68,
+            7821.3,
+            7933.43,
+            7609.61,
+            7938.38
+          ],
+          "better": "higher"
+        }
+      },
+      "memory-64m": {
+        "read.bw_mibps": {
+          "value": 3905.86,
+          "std": 83.9,
+          "samples": [
+            3800.7,
+            3828.53,
+            3963.29,
+            3968.52,
+            3968.24
+          ],
+          "better": "higher"
+        },
+        "write.bw_mibps": {
+          "value": 2957.61,
+          "std": 46.92,
+          "samples": [
+            2874.71,
+            2970.52,
+            2985.87,
+            2985.48,
+            2971.45
+          ],
+          "better": "higher"
+        }
+      },
+      "net": {
+        "tcp.bw_gbps": {
+          "value": 20.46,
+          "std": 1.04,
+          "samples": [
+            21.15,
+            20.65,
+            21.07,
+            18.65,
+            20.8
+          ],
+          "better": "higher"
+        },
+        "tcp-zc.bw_gbps": {
+          "value": 30.82,
+          "std": 0.42,
+          "samples": [
+            30.97,
+            30.38,
+            31.38,
+            30.94,
+            30.43
+          ],
+          "better": "higher"
+        },
+        "udp-64b.pps": {
+          "value": 124021.71,
+          "std": 892.24,
+          "samples": [
+            123158.75,
+            123872.65,
+            123515.44,
+            124070.75,
+            125490.97
+          ],
+          "better": "higher"
+        },
+        "udp-64b-multi.pps": {
+          "value": 233218.15,
+          "std": 4643.47,
+          "samples": [
+            236471.15,
+            232628.54,
+            225520.23,
+            234434.17,
+            237036.63
+          ],
+          "better": "higher"
+        }
+      },
+      "syscall": {
+        "usecs_op": {
+          "value": 0.44,
+          "std": 0.01,
+          "samples": [
+            0.46,
+            0.44,
+            0.44,
+            0.44,
+            0.44
+          ],
+          "better": "lower"
+        }
+      },
+      "perf-sched": {
+        "usecs_op": {
+          "value": 6.16,
+          "std": 0.25,
+          "samples": [
+            6.37,
+            6.14,
+            5.91,
+            5.94,
+            6.45
+          ],
+          "better": "lower"
+        }
+      },
+      "ipc": {
+        "total_s": {
+          "value": 7.06,
+          "std": 0.07,
+          "samples": [
+            6.93,
+            7.1,
+            7.07,
+            7.1,
+            7.08
+          ],
+          "better": "lower"
+        }
+      },
+      "pagefault": {
+        "bogo_ops_s": {
+          "value": 20549.3,
+          "std": 212.2,
+          "samples": [
+            20314.63,
+            20571.28,
+            20753.65,
+            20756.9,
+            20350.02
+          ],
+          "better": "higher"
+        }
+      },
+      "fork": {
+        "bogo_ops_s": {
+          "value": 1618.31,
+          "std": 27.89,
+          "samples": [
+            1616.05,
+            1660.69,
+            1627.48,
+            1596.27,
+            1591.08
+          ],
+          "better": "higher"
+        }
+      }
+    },
+    "skipped": {}
   }
 }
