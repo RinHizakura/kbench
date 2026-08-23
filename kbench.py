@@ -12,7 +12,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 PREFIX = "runs"  # -o overrides; data lands in data/<PREFIX>/
 NPROC = os.cpu_count()
-REPEAT = 5  # iterations per benchmark, aggregated to mean+std
+REPEAT = 5  # iterations per benchmark, aggregated to median+std
 
 # Each bench_* returns {metric: (value, "higher"|"lower")}; aggregate() folds
 # REPEAT of those into the stored {metric: {value, std, better}} form.
@@ -137,7 +137,7 @@ def _stressng(stressor):
 
 BENCHMARKS = {
     "fio":        {"needs": "fio",       "fn": bench_fio},
-    "schbench-heavy": {"needs": "schbench", "fn": bench_schbench_heavy},
+    "schbench-heavy": {"needs": "schbench", "fn": bench_schbench_heavy, "repeat": 9},
     "schbench-light": {"needs": "schbench", "fn": bench_schbench_light},
     "memory-256k": {"needs": "sysbench", "fn": lambda: _bench_memory("256K")},
     "memory-64m":  {"needs": "sysbench", "fn": lambda: _bench_memory("64M")},
@@ -154,7 +154,7 @@ def aggregate(runs):
     out = {}
     for k in {k: None for r in runs for k in r}:  # ordered union of metric keys
         vals = [r[k][0] for r in runs if k in r]
-        out[k] = {"value": round(statistics.mean(vals), 2),
+        out[k] = {"value": round(statistics.median(vals), 2),
                   "std": round(statistics.stdev(vals), 2) if len(vals) > 1 else 0,
                   "samples": [round(v, 2) for v in vals],
                   "better": next(r[k][1] for r in runs if k in r)}
@@ -205,10 +205,8 @@ def sysinfo():
             info[name] = Path(path).read_text().strip()
         except OSError:
             pass
-    # full config lives in data/<platform>/configs/<hash>.config (deduped by
-    # content); runs only store the hash, so results.json stays small
     if cfg := kconfig():
-        h = hashlib.sha256(cfg.encode()).hexdigest()[:12]
+        h = hashlib.sha1(cfg.encode()).hexdigest()[:8]
         d = ROOT / "data" / PREFIX / "configs"
         d.mkdir(parents=True, exist_ok=True)
         (d / f"{h}.config").write_text(cfg)

@@ -5,91 +5,119 @@
       "date": "2026-08-20T00:06:47",
       "cmdline": "dma.dmachans=0x37f5 bcm2709.boardrev=0xd03115 bcm2709.serial=0x9d714099 bcm2709.uart_clock=48000000 bcm2709.disk_led_gpio=42 bcm2709.disk_led_active_low=0 smsc95xx.macaddr=D8:3A:DD:0A:CC:5F vc_mem.mem_base=0x3ec00000 vc_mem.mem_size=0x40000000  multipath=off dwc_otg.lpm_enable=0 console=tty1 root=LABEL=writable rootfstype=ext4 panic=10 rootwait fixrtc console=ttyS1,115200",
       "governor": "schedutil",
-      "config": "9472b395ada6"
+      "config": "024d75e8"
     },
     "benchmarks": {
       "schbench-heavy": {
         "wake_p50.0_us": {
-          "value": 372.4,
-          "std": 502.67,
+          "value": 999,
+          "std": 496.34,
           "samples": [
             8,
             8,
-            8,
-            833,
-            1005
+            9,
+            1003,
+            1005,
+            997,
+            1001,
+            1001,
+            999
           ],
           "better": "lower"
         },
         "wake_p99.0_us": {
-          "value": 3063.2,
-          "std": 58.41,
+          "value": 3100,
+          "std": 28.97,
           "samples": [
-            2996,
-            3004,
-            3116,
+            3060,
+            3036,
             3108,
-            3092
+            3116,
+            3092,
+            3092,
+            3132,
+            3100,
+            3100
           ],
           "better": "lower"
         },
         "wake_p99.9_us": {
-          "value": 3120.8,
-          "std": 20.86,
+          "value": 3444,
+          "std": 5147.58,
           "samples": [
-            3084,
-            3124,
-            3132,
-            3132,
-            3132
+            5000,
+            18976,
+            3252,
+            4028,
+            3444,
+            3244,
+            3452,
+            3292,
+            3316
           ],
           "better": "lower"
         },
         "req_p50.0_us": {
-          "value": 51084.8,
-          "std": 1084.61,
+          "value": 52544,
+          "std": 2071.86,
           "samples": [
-            51904,
-            51520,
-            52032,
-            50496,
-            49472
+            48960,
+            48576,
+            52544,
+            51008,
+            50624,
+            53696,
+            52800,
+            53824,
+            53952
           ],
           "better": "lower"
         },
         "req_p99.0_us": {
-          "value": 55846.4,
-          "std": 3152.8,
+          "value": 82304,
+          "std": 26861.5,
           "samples": [
-            52928,
-            53184,
-            60736,
-            56256,
-            56128
+            55360,
+            75136,
+            56384,
+            57024,
+            82304,
+            110464,
+            113792,
+            107136,
+            120192
           ],
           "better": "lower"
         },
         "req_p99.9_us": {
-          "value": 70259.2,
-          "std": 19659.22,
+          "value": 119680,
+          "std": 38789.24,
           "samples": [
-            79488,
-            55232,
-            100736,
+            124032,
+            127360,
+            57280,
             58816,
-            57024
+            113792,
+            170240,
+            119680,
+            115584,
+            162560
           ],
           "better": "lower"
         },
         "avg_rps": {
-          "value": 156.89,
-          "std": 3.33,
+          "value": 148.03,
+          "std": 6.92,
           "samples": [
-            160.82,
-            160.07,
-            155.53,
-            154.43,
-            153.58
+            158.7,
+            157.68,
+            152.6,
+            150.57,
+            148.03,
+            144.65,
+            143.76,
+            141.46,
+            139.18
           ],
           "better": "higher"
         }
@@ -120,7 +148,7 @@
           "better": "lower"
         },
         "wake_p99.9_us": {
-          "value": 16.4,
+          "value": 15,
           "std": 3.97,
           "samples": [
             14,
@@ -144,7 +172,7 @@
           "better": "lower"
         },
         "req_p99.0_us": {
-          "value": 11504,
+          "value": 11440,
           "std": 129.98,
           "samples": [
             11728,
@@ -168,7 +196,7 @@
           "better": "lower"
         },
         "avg_rps": {
-          "value": 177.67,
+          "value": 177.7,
           "std": 0.09,
           "samples": [
             177.5,
@@ -182,7 +210,7 @@
       },
       "memory-256k": {
         "read.bw_mibps": {
-          "value": 11320.73,
+          "value": 11231.5,
           "std": 210.56,
           "samples": [
             11210.64,
@@ -194,7 +222,7 @@
           "better": "higher"
         },
         "write.bw_mibps": {
-          "value": 7889.64,
+          "value": 7938.01,
           "std": 89.43,
           "samples": [
             7769.44,
@@ -208,7 +236,7 @@
       },
       "memory-64m": {
         "read.bw_mibps": {
-          "value": 3914.32,
+          "value": 3970.09,
           "std": 77.1,
           "samples": [
             3829.54,
@@ -220,7 +248,7 @@
           "better": "higher"
         },
         "write.bw_mibps": {
-          "value": 2960.15,
+          "value": 2984.66,
           "std": 48.65,
           "samples": [
             2874.28,
@@ -234,7 +262,7 @@
       },
       "net": {
         "tcp.bw_gbps": {
-          "value": 20.19,
+          "value": 20.4,
           "std": 1.22,
           "samples": [
             18.2,
@@ -246,7 +274,7 @@
           "better": "higher"
         },
         "tcp-zc.bw_gbps": {
-          "value": 29.32,
+          "value": 31.69,
           "std": 4.44,
           "samples": [
             31.88,
@@ -258,7 +286,7 @@
           "better": "higher"
         },
         "udp-64b.pps": {
-          "value": 124106.84,
+          "value": 123728.2,
           "std": 2546.1,
           "samples": [
             123636.79,
@@ -270,7 +298,7 @@
           "better": "higher"
         },
         "udp-64b-multi.pps": {
-          "value": 226512.42,
+          "value": 224636.31,
           "std": 7903.65,
           "samples": [
             240042.29,
@@ -298,7 +326,7 @@
       },
       "perf-sched": {
         "usecs_op": {
-          "value": 5.68,
+          "value": 5.45,
           "std": 1.23,
           "samples": [
             4.43,
@@ -326,7 +354,7 @@
       },
       "pagefault": {
         "bogo_ops_s": {
-          "value": 20442.26,
+          "value": 20298.52,
           "std": 203.35,
           "samples": [
             20298.52,
@@ -340,7 +368,7 @@
       },
       "fork": {
         "bogo_ops_s": {
-          "value": 1658.58,
+          "value": 1664.58,
           "std": 16.28,
           "samples": [
             1667.79,
@@ -355,104 +383,132 @@
     },
     "skipped": {}
   },
-  "7.2.0-rc7-gb14ddfec-db2ddb87_n2": {
+  "7.2.0-g52b9772f-c5c7a47a_n2": {
     "sysinfo": {
-      "kernel": "7.2.0-rc7-gb14ddfec-db2ddb87",
-      "date": "2026-08-20T22:12:39",
+      "kernel": "7.2.0-g52b9772f-c5c7a47a",
+      "date": "2026-08-23T21:20:20",
       "cmdline": "dma.dmachans=0x37f5 bcm2709.boardrev=0xd03115 bcm2709.serial=0x9d714099 bcm2709.uart_clock=48000000 bcm2709.disk_led_gpio=42 bcm2709.disk_led_active_low=0 smsc95xx.macaddr=D8:3A:DD:0A:CC:5F vc_mem.mem_base=0x3ec00000 vc_mem.mem_size=0x40000000  multipath=off dwc_otg.lpm_enable=0 console=tty1 root=LABEL=writable rootfstype=ext4 panic=10 rootwait fixrtc console=ttyS1,115200",
       "governor": "schedutil",
-      "config": "1ff1a6bd1561"
+      "config": "52b9772f"
     },
     "benchmarks": {
       "schbench-heavy": {
         "wake_p50.0_us": {
-          "value": 3410.4,
-          "std": 587.51,
+          "value": 1003,
+          "std": 631.73,
           "samples": [
-            4004,
-            3996,
-            3124,
-            3284,
-            2644
+            9,
+            9,
+            253,
+            1001,
+            1009,
+            1998,
+            1003,
+            1003,
+            1003
           ],
           "better": "lower"
         },
         "wake_p99.0_us": {
-          "value": 5921.6,
-          "std": 64.6,
+          "value": 3108,
+          "std": 45.45,
           "samples": [
-            5928,
-            5928,
-            5816,
-            5992,
-            5944
+            3052,
+            3004,
+            3092,
+            3116,
+            3124,
+            3108,
+            3092,
+            3164,
+            3108
           ],
           "better": "lower"
         },
         "wake_p99.9_us": {
-          "value": 8744,
-          "std": 2844.62,
+          "value": 4004,
+          "std": 2249.84,
           "samples": [
-            12016,
-            11408,
-            6056,
-            8136,
-            6104
+            6200,
+            8040,
+            3188,
+            4004,
+            3460,
+            7288,
+            3292,
+            8464,
+            3132
           ],
           "better": "lower"
         },
         "req_p50.0_us": {
-          "value": 44352,
-          "std": 4118.94,
+          "value": 51008,
+          "std": 1224.02,
           "samples": [
-            39616,
-            40256,
-            46144,
-            47296,
-            48448
+            50880,
+            51904,
+            49856,
+            51008,
+            50752,
+            50496,
+            53056,
+            52800,
+            53184
           ],
           "better": "lower"
         },
         "req_p99.0_us": {
-          "value": 65728,
-          "std": 10798.66,
+          "value": 57664,
+          "std": 29845.53,
           "samples": [
-            71552,
-            49600,
-            64320,
-            78720,
-            64448
+            53056,
+            53056,
+            57664,
+            57664,
+            57664,
+            62016,
+            115328,
+            114816,
+            118656
           ],
           "better": "lower"
         },
         "req_p99.9_us": {
-          "value": 110745.6,
-          "std": 21652.89,
+          "value": 120704,
+          "std": 37142.24,
           "samples": [
-            134912,
-            121984,
-            99200,
-            118144,
-            79488
+            56128,
+            58944,
+            101760,
+            131840,
+            66176,
+            150272,
+            120704,
+            146688,
+            121216
           ],
           "better": "lower"
         },
         "avg_rps": {
-          "value": 161.92,
-          "std": 14.9,
+          "value": 150.69,
+          "std": 7.28,
           "samples": [
-            180.49,
-            175.08,
-            155.79,
-            150.78,
-            147.47
+            160.78,
+            158.88,
+            155.04,
+            151.85,
+            150.69,
+            146.46,
+            144.88,
+            142.23,
+            140.0
           ],
           "better": "higher"
         }
       },
       "schbench-light": {
         "wake_p50.0_us": {
-          "value": 6.4,
+          "value": 6,
           "std": 0.55,
           "samples": [
             6,
@@ -465,389 +521,33 @@
         },
         "wake_p99.0_us": {
           "value": 11,
-          "std": 2.24,
-          "samples": [
-            10,
-            15,
-            10,
-            10,
-            10
-          ],
-          "better": "lower"
-        },
-        "wake_p99.9_us": {
-          "value": 45.2,
-          "std": 36.3,
-          "samples": [
-            104,
-            49,
-            19,
-            42,
-            12
-          ],
-          "better": "lower"
-        },
-        "req_p50.0_us": {
-          "value": 11190.4,
-          "std": 14.31,
-          "samples": [
-            11216,
-            11184,
-            11184,
-            11184,
-            11184
-          ],
-          "better": "lower"
-        },
-        "req_p99.0_us": {
-          "value": 11504,
-          "std": 289.77,
-          "samples": [
-            11696,
-            11920,
-            11280,
-            11344,
-            11280
-          ],
-          "better": "lower"
-        },
-        "req_p99.9_us": {
-          "value": 11676.8,
-          "std": 449.48,
-          "samples": [
-            11728,
-            12432,
-            11312,
-            11504,
-            11408
-          ],
-          "better": "lower"
-        },
-        "avg_rps": {
-          "value": 178.16,
-          "std": 0.12,
-          "samples": [
-            177.96,
-            178.23,
-            178.22,
-            178.19,
-            178.22
-          ],
-          "better": "higher"
-        }
-      },
-      "memory-256k": {
-        "read.bw_mibps": {
-          "value": 11369.18,
-          "std": 204.97,
-          "samples": [
-            11282.94,
-            11735.46,
-            11264.4,
-            11288.97,
-            11274.13
-          ],
-          "better": "higher"
-        },
-        "write.bw_mibps": {
-          "value": 6970.68,
-          "std": 188.74,
-          "samples": [
-            6907.73,
-            6972.69,
-            7138.62,
-            6688.5,
-            7145.88
-          ],
-          "better": "higher"
-        }
-      },
-      "memory-64m": {
-        "read.bw_mibps": {
-          "value": 3967.97,
-          "std": 56.16,
-          "samples": [
-            3867.6,
-            3994.65,
-            3991.77,
-            3995.99,
-            3989.82
-          ],
-          "better": "higher"
-        },
-        "write.bw_mibps": {
-          "value": 2971.43,
-          "std": 28.59,
-          "samples": [
-            2922.94,
-            2983.08,
-            2985.15,
-            2995.77,
-            2970.2
-          ],
-          "better": "higher"
-        }
-      },
-      "net": {
-        "tcp.bw_gbps": {
-          "value": 17.8,
-          "std": 4.45,
-          "samples": [
-            18.83,
-            19.74,
-            19.99,
-            9.92,
-            20.54
-          ],
-          "better": "higher"
-        },
-        "tcp-zc.bw_gbps": {
-          "value": 30.18,
-          "std": 4.68,
-          "samples": [
-            32.16,
-            21.82,
-            32.39,
-            32.74,
-            31.76
-          ],
-          "better": "higher"
-        },
-        "udp-64b.pps": {
-          "value": 124259.46,
-          "std": 621.36,
-          "samples": [
-            124422.08,
-            123305.63,
-            124074.73,
-            124968.5,
-            124526.38
-          ],
-          "better": "higher"
-        },
-        "udp-64b-multi.pps": {
-          "value": 235666.67,
-          "std": 15861.94,
-          "samples": [
-            226582.03,
-            229191.43,
-            263781.5,
-            226870.48,
-            231907.93
-          ],
-          "better": "higher"
-        }
-      },
-      "syscall": {
-        "usecs_op": {
-          "value": 0.46,
-          "std": 0.0,
-          "samples": [
-            0.46,
-            0.46,
-            0.45,
-            0.47,
-            0.45
-          ],
-          "better": "lower"
-        }
-      },
-      "perf-sched": {
-        "usecs_op": {
-          "value": 7.52,
-          "std": 0.28,
-          "samples": [
-            7.86,
-            7.35,
-            7.65,
-            7.6,
-            7.13
-          ],
-          "better": "lower"
-        }
-      },
-      "ipc": {
-        "total_s": {
-          "value": 6.77,
-          "std": 0.04,
-          "samples": [
-            6.7,
-            6.75,
-            6.77,
-            6.79,
-            6.82
-          ],
-          "better": "lower"
-        }
-      },
-      "pagefault": {
-        "bogo_ops_s": {
-          "value": 21150.99,
-          "std": 173.85,
-          "samples": [
-            21213.18,
-            21103.84,
-            21291.04,
-            21277.36,
-            20869.52
-          ],
-          "better": "higher"
-        }
-      },
-      "fork": {
-        "bogo_ops_s": {
-          "value": 1614.63,
-          "std": 28.74,
-          "samples": [
-            1650.51,
-            1640.58,
-            1600.78,
-            1590.49,
-            1590.8
-          ],
-          "better": "higher"
-        }
-      }
-    },
-    "skipped": {}
-  },
-  "7.2.0-rc7-g161fafca-db2ddb87_n3": {
-    "sysinfo": {
-      "kernel": "7.2.0-rc7-g161fafca-db2ddb87",
-      "date": "2026-08-20T23:10:06",
-      "cmdline": "dma.dmachans=0x37f5 bcm2709.boardrev=0xd03115 bcm2709.serial=0x9d714099 bcm2709.uart_clock=48000000 bcm2709.disk_led_gpio=42 bcm2709.disk_led_active_low=0 smsc95xx.macaddr=D8:3A:DD:0A:CC:5F vc_mem.mem_base=0x3ec00000 vc_mem.mem_size=0x40000000  multipath=off dwc_otg.lpm_enable=0 console=tty1 root=LABEL=writable rootfstype=ext4 panic=10 rootwait fixrtc console=ttyS1,115200",
-      "governor": "schedutil",
-      "config": "c989d2afa7e8"
-    },
-    "benchmarks": {
-      "schbench-heavy": {
-        "wake_p50.0_us": {
-          "value": 412.4,
-          "std": 904.27,
-          "samples": [
-            7,
-            7,
-            8,
-            10,
-            2030
-          ],
-          "better": "lower"
-        },
-        "wake_p99.0_us": {
-          "value": 2946.4,
-          "std": 227.36,
-          "samples": [
-            2820,
-            2604,
-            3092,
-            3100,
-            3116
-          ],
-          "better": "lower"
-        },
-        "wake_p99.9_us": {
-          "value": 3996,
-          "std": 1125.2,
-          "samples": [
-            3132,
-            3060,
-            3532,
-            5704,
-            4552
-          ],
-          "better": "lower"
-        },
-        "req_p50.0_us": {
-          "value": 52390.4,
-          "std": 1064.79,
-          "samples": [
-            51904,
-            51904,
-            53440,
-            53568,
-            51136
-          ],
-          "better": "lower"
-        },
-        "req_p99.0_us": {
-          "value": 67225.6,
-          "std": 23807.9,
-          "samples": [
-            54080,
-            52672,
-            56896,
-            109184,
-            63296
-          ],
-          "better": "lower"
-        },
-        "req_p99.9_us": {
-          "value": 91968,
-          "std": 30278.76,
-          "samples": [
-            70784,
-            53824,
-            93056,
-            126848,
-            115328
-          ],
-          "better": "lower"
-        },
-        "avg_rps": {
-          "value": 152.59,
-          "std": 2.65,
-          "samples": [
-            155.43,
-            154.92,
-            152.56,
-            150.9,
-            149.16
-          ],
-          "better": "higher"
-        }
-      },
-      "schbench-light": {
-        "wake_p50.0_us": {
-          "value": 6.2,
           "std": 0.45,
           "samples": [
-            6,
-            7,
-            6,
-            6,
-            6
-          ],
-          "better": "lower"
-        },
-        "wake_p99.0_us": {
-          "value": 12,
-          "std": 1.87,
-          "samples": [
             10,
-            12,
             11,
-            12,
-            15
+            11,
+            11,
+            11
           ],
           "better": "lower"
         },
         "wake_p99.9_us": {
-          "value": 23.6,
-          "std": 14.36,
+          "value": 15,
+          "std": 3.97,
           "samples": [
-            14,
-            48,
-            14,
             17,
-            25
+            13,
+            15,
+            14,
+            23
           ],
           "better": "lower"
         },
         "req_p50.0_us": {
           "value": 11248,
-          "std": 0.0,
+          "std": 57.24,
           "samples": [
-            11248,
+            11376,
             11248,
             11248,
             11248,
@@ -856,210 +556,210 @@
           "better": "lower"
         },
         "req_p99.0_us": {
-          "value": 11600,
-          "std": 315.16,
+          "value": 11440,
+          "std": 180.17,
           "samples": [
-            11760,
-            11376,
+            11792,
+            11440,
             11440,
             11344,
-            12080
+            11376
           ],
           "better": "lower"
         },
         "req_p99.9_us": {
-          "value": 12361.6,
-          "std": 1692.59,
+          "value": 11568,
+          "std": 257.0,
           "samples": [
-            11824,
-            11440,
-            11696,
+            11984,
+            11888,
             11472,
-            15376
+            11408,
+            11568
           ],
           "better": "lower"
         },
         "avg_rps": {
-          "value": 177.54,
-          "std": 0.14,
+          "value": 177.59,
+          "std": 0.18,
           "samples": [
-            177.3,
-            177.64,
-            177.61,
-            177.6,
-            177.57
+            177.2,
+            177.63,
+            177.53,
+            177.62,
+            177.59
           ],
           "better": "higher"
         }
       },
       "memory-256k": {
         "read.bw_mibps": {
-          "value": 11226.6,
-          "std": 15.12,
+          "value": 11242.36,
+          "std": 20.59,
           "samples": [
-            11238.63,
-            11230.23,
-            11233.77,
-            11200.27,
-            11230.08
+            11203.97,
+            11242.36,
+            11234.74,
+            11248.32,
+            11258.06
           ],
           "better": "higher"
         },
         "write.bw_mibps": {
-          "value": 7855.48,
-          "std": 148.98,
+          "value": 7906.64,
+          "std": 45.29,
           "samples": [
-            7974.68,
-            7821.3,
-            7933.43,
-            7609.61,
-            7938.38
+            7900.98,
+            7901.55,
+            8006.89,
+            7917.85,
+            7906.64
           ],
           "better": "higher"
         }
       },
       "memory-64m": {
         "read.bw_mibps": {
-          "value": 3905.86,
-          "std": 83.9,
+          "value": 3830.76,
+          "std": 62.26,
           "samples": [
-            3800.7,
-            3828.53,
-            3963.29,
-            3968.52,
-            3968.24
+            3826.73,
+            3830.5,
+            3830.76,
+            3833.37,
+            3969.46
           ],
           "better": "higher"
         },
         "write.bw_mibps": {
-          "value": 2957.61,
-          "std": 46.92,
+          "value": 2883.58,
+          "std": 52.59,
           "samples": [
-            2874.71,
-            2970.52,
-            2985.87,
-            2985.48,
-            2971.45
+            2854.4,
+            2877.09,
+            2883.58,
+            2926.23,
+            2987.56
           ],
           "better": "higher"
         }
       },
       "net": {
         "tcp.bw_gbps": {
-          "value": 20.46,
-          "std": 1.04,
+          "value": 20.22,
+          "std": 1.51,
           "samples": [
-            21.15,
-            20.65,
-            21.07,
-            18.65,
-            20.8
+            20.99,
+            17.18,
+            20.54,
+            20.22,
+            20.2
           ],
           "better": "higher"
         },
         "tcp-zc.bw_gbps": {
           "value": 30.82,
-          "std": 0.42,
+          "std": 3.19,
           "samples": [
-            30.97,
-            30.38,
-            31.38,
-            30.94,
-            30.43
+            30.82,
+            31.45,
+            23.8,
+            31.01,
+            30.1
           ],
           "better": "higher"
         },
         "udp-64b.pps": {
-          "value": 124021.71,
-          "std": 892.24,
+          "value": 124542.58,
+          "std": 1110.35,
           "samples": [
-            123158.75,
-            123872.65,
-            123515.44,
-            124070.75,
-            125490.97
+            123427.34,
+            123972.75,
+            126286.2,
+            124542.58,
+            125193.29
           ],
           "better": "higher"
         },
         "udp-64b-multi.pps": {
-          "value": 233218.15,
-          "std": 4643.47,
+          "value": 313794.6,
+          "std": 6990.75,
           "samples": [
-            236471.15,
-            232628.54,
-            225520.23,
-            234434.17,
-            237036.63
+            317028.85,
+            311873.97,
+            313794.6,
+            328207.2,
+            311070.48
           ],
           "better": "higher"
         }
       },
       "syscall": {
         "usecs_op": {
-          "value": 0.44,
+          "value": 0.47,
           "std": 0.01,
           "samples": [
+            0.48,
             0.46,
-            0.44,
-            0.44,
-            0.44,
-            0.44
+            0.47,
+            0.46,
+            0.47
           ],
           "better": "lower"
         }
       },
       "perf-sched": {
         "usecs_op": {
-          "value": 6.16,
-          "std": 0.25,
+          "value": 7.14,
+          "std": 0.57,
           "samples": [
-            6.37,
-            6.14,
-            5.91,
-            5.94,
-            6.45
+            6.78,
+            6.21,
+            7.61,
+            7.14,
+            7.47
           ],
           "better": "lower"
         }
       },
       "ipc": {
         "total_s": {
-          "value": 7.06,
-          "std": 0.07,
+          "value": 6.99,
+          "std": 0.12,
           "samples": [
-            6.93,
-            7.1,
+            6.92,
+            6.97,
+            6.99,
             7.07,
-            7.1,
-            7.08
+            7.22
           ],
           "better": "lower"
         }
       },
       "pagefault": {
         "bogo_ops_s": {
-          "value": 20549.3,
-          "std": 212.2,
+          "value": 20045.07,
+          "std": 188.97,
           "samples": [
-            20314.63,
-            20571.28,
-            20753.65,
-            20756.9,
-            20350.02
+            20292.18,
+            20033.37,
+            19943.45,
+            20045.07,
+            20386.32
           ],
           "better": "higher"
         }
       },
       "fork": {
         "bogo_ops_s": {
-          "value": 1618.31,
-          "std": 27.89,
+          "value": 1614.32,
+          "std": 34.94,
           "samples": [
-            1616.05,
-            1660.69,
-            1627.48,
-            1596.27,
-            1591.08
+            1688.71,
+            1648.0,
+            1614.32,
+            1603.98,
+            1613.87
           ],
           "better": "higher"
         }
