@@ -15,7 +15,6 @@
   td.num { text-align: right; font-variant-numeric: tabular-nums; }
   .reg { color: #c0392b; font-weight: 600; }
   .imp { color: #1e8449; }
-  .ins { color: #999; }
   .sys { color: #666; font-size: .85rem; margin: .3rem 0; overflow-wrap: anywhere; }
   #sys table, #cfg table { font-size: .85rem; color: #444; }
   #sys td, #cfg td { overflow-wrap: anywhere; }
@@ -139,7 +138,7 @@ function render() {
         const sig = conf > 0.95;
         const worse = sig && (m.better === "higher" ? d < -THRESHOLD : d > THRESHOLD);
         const better = sig && (m.better === "higher" ? d > THRESHOLD : d < -THRESHOLD);
-        const cls = worse ? "reg" : better ? "imp" : !sig ? "ins" : "";
+        const cls = worse ? "reg" : better ? "imp" : "";
         const st = worse ? "REGRESSION" : better ? "improved"
                  : !sig && Math.abs(d) > THRESHOLD ? "unconfirmed" : "–";
         cells = cells + `<td class="num">${fmt(bm)}</td>` +
