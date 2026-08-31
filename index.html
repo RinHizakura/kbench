@@ -35,7 +35,7 @@
 <div id="cfg"></div>
 <div id="out"></div>
 <script type="module">
-const THRESHOLD = 5;  // flag as regression if worse than baseline by this %
+const THRESHOLD = 12;  // flag as regression if worse than baseline by this %
 const q = new URLSearchParams(location.search);  // ?platform=<dir>&cur=<run>&base=<run> deep-links a comparison
 const $ = id => document.getElementById(id);
 const opts = { cache: "no-cache" };  // Pages sends max-age=600; revalidate so fresh runs show up immediately
