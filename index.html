@@ -141,10 +141,10 @@ function render() {
         const better = sig && (m.better === "higher" ? d > THRESHOLD : d < -THRESHOLD);
         const cls = worse ? "reg" : better ? "imp" : !sig ? "ins" : "";
         const st = worse ? "REGRESSION" : better ? "improved"
-                 : !sig ? (Math.abs(d) > THRESHOLD ? "unconfirmed" : "–") : "ok";
+                 : !sig && Math.abs(d) > THRESHOLD ? "unconfirmed" : "–";
         cells = cells + `<td class="num">${fmt(bm)}</td>` +
                 `<td class="num ${cls}">${d > 0 ? "+" : ""}${d.toFixed(1)}%</td>` +
-                `<td class="num ${cls}">${(conf * 100).toFixed(0)}%</td><td class="${cls}">${st}</td>`;
+                `<td class="num ${cls}">${Math.abs(d) > THRESHOLD ? (conf * 100).toFixed(0) + "%" : "–"}</td><td class="${cls}">${st}</td>`;
       } else {
         cells = cells + `<td class="num">–</td><td class="num"></td><td class="num"></td><td>new</td>`;
       }
