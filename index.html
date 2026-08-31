@@ -127,14 +127,22 @@ function render() {
     if (base) {
       if (bm && bm.value) {
         const d = (m.value - bm.value) / bm.value * 100;
-        // confidence the delta is real: z-test on the two means (erf approx, Abramowitz–Stegun)
-        // ponytail: normal approx; with n=5 a t-test would be stricter, fine for a dashboard
-        const sem = x => (x.std || 0) / Math.sqrt(x.samples?.length || 1);
-        const se = Math.hypot(sem(m), sem(bm));
+        // confidence the delta is real: Mann-Whitney rank test on the raw samples.
+        // Latency metrics may be bimodal. The median flips modes on a single rep, and a
+        // mean/std z-test on that flip reports false 99% confidence. Ranks don't care
+        // which mode the median lands in.
         const erf = x => { const t = 1 / (1 + 0.3275911 * x);
           return 1 - ((((1.061405429 * t - 1.453152027) * t + 1.421413741) * t
                        - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x); };
-        const conf = erf(Math.abs(m.value - bm.value) / (se || 1e-12) / Math.SQRT2);
+        let conf = 0;
+        if (m.samples?.length > 1 && bm.samples?.length > 1) {
+          let u = 0;
+          for (const x of m.samples) for (const y of bm.samples) u += x > y ? 1 : x === y ? 0.5 : 0;
+          const n = m.samples.length, k = bm.samples.length;
+          // ponytail: normal approx, no tie correction — slightly conservative at n=9, fine for flagging
+          const z = Math.abs(u - n * k / 2) / Math.sqrt(n * k * (n + k + 1) / 12);
+          conf = erf(z / Math.SQRT2);
+        }
         const sig = conf > 0.95;
         const worse = sig && (m.better === "higher" ? d < -THRESHOLD : d > THRESHOLD);
         const better = sig && (m.better === "higher" ? d > THRESHOLD : d < -THRESHOLD);
