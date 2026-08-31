@@ -144,15 +144,16 @@ function render() {
                  : !sig && Math.abs(d) > THRESHOLD ? "unconfirmed" : "–";
         cells = cells + `<td class="num">${fmt(bm)}</td>` +
                 `<td class="num ${cls}">${d > 0 ? "+" : ""}${d.toFixed(1)}%</td>` +
-                `<td class="num ${cls}">${Math.abs(d) > THRESHOLD ? (conf * 100).toFixed(0) + "%" : "–"}</td><td class="${cls}">${st}</td>`;
+                `<td class="num ${cls}">${Math.abs(d) > THRESHOLD ? (conf * 100).toFixed(0) + "%" : "–"}</td><td class="${cls}">${st}</td>` +
+                `<td class="sys">${cur.notes?.[`${bench}.${metric}`] || ""}</td>`;
       } else {
-        cells = cells + `<td class="num">–</td><td class="num"></td><td class="num"></td><td>new</td>`;
+        cells = cells + `<td class="num">–</td><td class="num"></td><td class="num"></td><td>new</td><td></td>`;
       }
     }
     rows += `<tr><td>${bench}</td><td>${metric}</td>${cells}</tr>`;
   }
   const head = base
-    ? "<tr><th>benchmark</th><th>metric</th><th>current</th><th>compare with</th><th>delta</th><th>confidence</th><th>status</th></tr>"
+    ? "<tr><th>benchmark</th><th>metric</th><th>current</th><th>compare with</th><th>delta</th><th>confidence</th><th>status</th><th>note</th></tr>"
     : "<tr><th>benchmark</th><th>metric</th><th>value</th></tr>";
   const skipped = Object.entries(cur.skipped || {})
     .map(([n, why]) => `<p class="sys">skipped ${n}: ${why}</p>`).join("");

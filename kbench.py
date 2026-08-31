@@ -135,6 +135,7 @@ def _stressng(stressor):
               r, f"stress-ng {stressor}")
     return {"bogo_ops_s": (v, "higher")}
 
+# 9 reps: these are governor-sensitive, median over 9 keeps the estimate stable.
 BENCHMARKS = {
     "fio":        {"needs": "fio",       "fn": bench_fio},
     "schbench-heavy": {"needs": "schbench", "fn": bench_schbench_heavy, "repeat": 9},
