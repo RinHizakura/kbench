@@ -5,7 +5,7 @@
     ./kbench.py list [-o PLATFORM]             # list saved runs
     ./kbench.py rm <run> [-o PLATFORM]         # delete one run
 """
-import gzip, hashlib, json, os, re, shutil, statistics, subprocess, sys, time
+import gzip, hashlib, json, os, re, shutil, statistics, subprocess, sys, threading, time
 from datetime import datetime
 from pathlib import Path
 
@@ -198,6 +198,55 @@ def kconfig():
     except OSError:
         return None
 
+def soc_temp():
+    """SoC temperature in °C, or None (no thermal zone)."""
+    try:
+        return round(int(Path("/sys/class/thermal/thermal_zone0/temp").read_text()) / 1000, 1)
+    except (OSError, ValueError):
+        return None
+
+def cpu_freq_mhz():
+    """Actual CPU clock in MHz. cpuinfo_cur_freq asks the driver (firmware clock on
+    the RPi), so it shows firmware throttling the governor can't see. Root-only
+    file; falls back to passwordless sudo, None if neither works."""
+    p = "/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq"
+    try:
+        return round(int(Path(p).read_text()) / 1000)
+    except (OSError, ValueError):
+        try:
+            r = subprocess.run(["sudo", "-n", "cat", p], capture_output=True, text=True)
+            return round(int(r.stdout) / 1000) if r.returncode == 0 else None
+        except Exception:
+            return None
+
+def sampled(fn):
+    """Run fn() while sampling SoC temp + actual clock every 10s in a thread.
+    Returns (fn(), start_temp, max_temp, min_freq, max_freq) — start temp shows heat
+    carried in from the previous rep/run, max temp the peak under load, min freq
+    whether the firmware throttled mid-rep (< nominal means yes), max freq the
+    clock actually reached. Sampler cost is one sysfs read (+ a sudo cat for the
+    root-only freq file) per 10s — noise-level.
+    """
+    stop = threading.Event()
+    temps, freqs = [], []
+    def loop():
+        while True:
+            if (t := soc_temp()) is not None:
+                temps.append(t)
+            if (f := cpu_freq_mhz()) is not None:
+                freqs.append(f)
+            if stop.wait(10):
+                return
+    th = threading.Thread(target=loop, daemon=True)
+    th.start()
+    try:
+        r = fn()
+    finally:
+        stop.set()
+        th.join()
+    return (r, temps[0] if temps else None, max(temps) if temps else None,
+            min(freqs) if freqs else None, max(freqs) if freqs else None)
+
 def sysinfo():
     info = {"kernel": os.uname().release, "date": datetime.now().isoformat(timespec="seconds")}
     for name, path in [("cmdline", "/proc/cmdline"),
@@ -240,13 +289,24 @@ def cmd_run(only=None):
             continue
         t0 = time.time()
         try:
-            runs = []
+            runs, temps, freqs = [], [], []
             repeat = b.get("repeat", REPEAT)
             for i in range(repeat):
                 print(f"RUN  {name} ({i + 1}/{repeat}) ...", flush=True)
-                runs.append(b["fn"]())
+                r, t0, tmax, fmin, fmax = sampled(b["fn"])
+                runs.append(r)
+                if t0 is not None:
+                    temps.append([t0, tmax])
+                if fmin is not None:
+                    freqs.append([fmin, fmax])
                 print("     -> " + "  ".join(f"{k}={round(v, 2)}" for k, (v, _) in runs[-1].items()), flush=True)
             result["benchmarks"][name] = aggregate(runs)
+            # per-rep [start, max] SoC temp + [min, max] actual clock, sampled every
+            # 10s during the rep — correlates latency modes with heat / firmware throttling
+            if temps:
+                result.setdefault("temps_c", {})[name] = temps
+            if freqs:
+                result.setdefault("freqs_mhz", {})[name] = freqs
             print(f"     done in {time.time()-t0:.0f}s")
         except Exception as e:
             result["skipped"][name] = str(e)

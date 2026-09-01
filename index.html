@@ -113,8 +113,15 @@ function render() {
   $("sys").innerHTML = sysTable(cur, base);
   cfgDiff(cur, base);
   let rows = "";
-  const fmt = m => (m.samples ? `<span title="runs: ${m.samples.join(", ")}">${m.value}</span>` : m.value)
-    + (m.std ? ` <span class="sys">±${m.std}</span>` : "");
+  // hover popup: per-rep samples, plus per-rep [start→max] °C and min MHz when the run recorded them
+  const fmt = (m, run, bench) => {
+    if (!m.samples) return m.value + (m.std ? ` <span class="sys">±${m.std}</span>` : "");
+    let tip = `runs: ${m.samples.join(", ")}`;
+    const t = run?.temps_c?.[bench], f = run?.freqs_mhz?.[bench];
+    if (t) tip += `&#10;temp °C: ${t.map(p => Array.isArray(p) ? `${p[0]}→${p[1]}` : p).join(", ")}`;
+    if (f) tip += `&#10;MHz: ${f.map(p => Array.isArray(p) ? (p[0] === p[1] ? p[0] : `${p[0]}–${p[1]}`) : p).join(", ")}`;
+    return `<span title="${tip}">${m.value}</span>` + (m.std ? ` <span class="sys">±${m.std}</span>` : "");
+  };
   for (const [bench, metric, m] of metrics(cur)) {
     if ($("bench").value && bench !== $("bench").value) continue;
     // schbench-heavy is saturated: rps + req latency are meaningful, wake latency
@@ -123,7 +130,7 @@ function render() {
     if (bench === "schbench-heavy" && metric.startsWith("wake_")) continue;
     if (bench === "schbench-light" && !metric.startsWith("wake_")) continue;
     const bm = base?.benchmarks[bench]?.[metric];
-    let cells = `<td class="num">${fmt(m)}</td>`;
+    let cells = `<td class="num">${fmt(m, cur, bench)}</td>`;
     if (base) {
       if (bm && bm.value) {
         const d = (m.value - bm.value) / bm.value * 100;
@@ -149,7 +156,7 @@ function render() {
         const cls = worse ? "reg" : better ? "imp" : "";
         const st = worse ? "REGRESSION" : better ? "improved"
                  : !sig && Math.abs(d) > THRESHOLD ? "unconfirmed" : "–";
-        cells = cells + `<td class="num">${fmt(bm)}</td>` +
+        cells = cells + `<td class="num">${fmt(bm, base, bench)}</td>` +
                 `<td class="num ${cls}">${d > 0 ? "+" : ""}${d.toFixed(1)}%</td>` +
                 `<td class="num ${cls}">${Math.abs(d) > THRESHOLD ? (conf * 100).toFixed(0) + "%" : "–"}</td><td class="${cls}">${st}</td>` +
                 `<td class="sys">${cur.notes?.[`${bench}.${metric}`] || ""}</td>`;
