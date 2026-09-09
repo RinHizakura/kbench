@@ -1719,7 +1719,8 @@
       ]
     },
     "notes": {
-      "perf-sched.usecs_op": "333238da9a19 (sched: Update time before requeueing delayed entities)"
+      "perf-sched.usecs_op": "333238da9a19 (sched: Update time before requeueing delayed entities)",
+      "net.udp-64b-multi.pps": "333238da9a19 (sched: Update time before requeueing delayed entities)"
     }
   },
   "7.2.0-g52b9772f-c5c7a47a_n3": {

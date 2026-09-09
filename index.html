@@ -159,7 +159,7 @@ function render() {
         cells = cells + `<td class="num">${fmt(bm, base, bench)}</td>` +
                 `<td class="num ${cls}">${d > 0 ? "+" : ""}${d.toFixed(1)}%</td>` +
                 `<td class="num ${cls}">${Math.abs(d) > THRESHOLD ? (conf * 100).toFixed(0) + "%" : "–"}</td><td class="${cls}">${st}</td>` +
-                `<td class="sys">${cur.notes?.[`${bench}.${metric}`] || ""}</td>`;
+                `<td class="sys">${cur.notes?.[`${bench}.${metric}`] || base.notes?.[`${bench}.${metric}`] || ""}</td>`;
       } else {
         cells = cells + `<td class="num">–</td><td class="num"></td><td class="num"></td><td>new</td><td></td>`;
       }
