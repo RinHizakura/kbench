@@ -144,7 +144,6 @@ BENCHMARKS = {
     "memory-64m":  {"needs": "sysbench", "fn": lambda: _bench_memory("64M")},
     "net":        {"needs": "iperf3",    "fn": bench_net},
     "syscall":    {"needs": "perf",      "fn": lambda: _perf_usecs("syscall", "basic")},
-    "perf-sched": {"needs": "perf",      "fn": lambda: _perf_usecs("sched", "pipe")},
     "ipc":        {"needs": "perf",      "fn": bench_ipc},
     "pagefault":  {"needs": "stress-ng", "fn": lambda: _stressng("fault")},
     "fork":       {"needs": "stress-ng", "fn": lambda: _stressng("fork")},

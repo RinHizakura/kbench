@@ -24,7 +24,6 @@ python3 -m http.server            # view report locally at http://localhost:8000
 | memory-64m | sysbench    | DRAM-regime memory bandwidth, read/write MiB/s (64M blocks)              |
 | net        | iperf3      | loopback TCP Gbps (plain + zero-copy), 64B UDP pps (1 + N streams)       |
 | syscall    | perf        | syscall entry/exit overhead                                              |
-| perf-sched | perf        | context-switch cost (sched pipe)                                         |
 | ipc        | perf        | scheduler+IPC throughput (hackbench-style)                               |
 | pagefault  | stress-ng   | page-fault rate                                                          |
 | fork       | stress-ng   | fork/exec rate                                                           |
