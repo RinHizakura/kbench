@@ -293,10 +293,10 @@ def cmd_run(only=None):
             repeat = b.get("repeat", REPEAT)
             for i in range(repeat):
                 print(f"RUN  {name} ({i + 1}/{repeat}) ...", flush=True)
-                r, t0, tmax, fmin, fmax = sampled(b["fn"])
+                r, tstart, tmax, fmin, fmax = sampled(b["fn"])
                 runs.append(r)
-                if t0 is not None:
-                    temps.append([t0, tmax])
+                if tstart is not None:
+                    temps.append([tstart, tmax])
                 if fmin is not None:
                     freqs.append([fmin, fmax])
                 print("     -> " + "  ".join(f"{k}={round(v, 2)}" for k, (v, _) in runs[-1].items()), flush=True)
