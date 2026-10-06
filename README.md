@@ -14,6 +14,10 @@ Latest report: <https://rinhizakura.github.io/kbench/>
 python3 -m http.server            # view report locally at http://localhost:8000
 ```
 
+Each benchmark lives in `workload/<name>.py`. Run one directly to execute it once and
+print its metrics without saving anything (e.g. `sudo python3 workload/perf-pipe.py`,
+`python3 workload/schbench.py schbench-light`).
+
 ## Benchmarks
 
 | name       | needs       | measures                                                                 |

@@ -5,203 +5,28 @@
     ./kbench.py list [-o PLATFORM]             # list saved runs
     ./kbench.py rm <run> [-o PLATFORM]         # delete one run
 """
-import gzip, hashlib, json, os, re, shutil, statistics, subprocess, sys, threading, time
+import gzip, hashlib, importlib.util, json, os, re, shutil, statistics, subprocess, sys, threading, time
 from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 PREFIX = "runs"  # -o overrides; data lands in data/<PREFIX>/
-NPROC = os.cpu_count()
 REPEAT = 5  # iterations per benchmark, aggregated to median+std
 
-# Each bench_* returns {metric: (value, "higher"|"lower")}; aggregate() folds
-# REPEAT of those into the stored {metric: {value, std, better}} form.
-
-def run_bench(cmd, **kw):
-    """Every benchmark command goes through here: stringify args, print it,
-    run it, raise on failure, return the finished process."""
-    cmd = [str(c) for c in cmd]
-    print("       " + " ".join(cmd), flush=True)
-    r = subprocess.run(cmd, capture_output=True, text=True, **kw)
-    if r.returncode:
-        err = r.stderr.strip()
-        raise RuntimeError(err.splitlines()[0] if err else f"{cmd[0]} exited {r.returncode}")
-    return r
-
-def parse(pattern, r, what):
-    """First regex group of a finished command's output as float, or a readable error."""
-    m = re.search(pattern, r.stdout + r.stderr)
-    if not m:
-        raise RuntimeError(f"could not parse {what} output")
-    return float(m.group(1))
-
-def bench_fio():
-    """4k randread/randwrite + 1M seq r/w + 4k fsync on a temp file."""
-    out = {}
-    testfile = ROOT / ".fio-testfile"
-    jobs = [
-        ("randread-4k",  ["--rw=randread",  "--bs=4k", "--iodepth=32"]),
-        ("randwrite-4k", ["--rw=randwrite", "--bs=4k", "--iodepth=32"]),
-        ("seqread-1m",   ["--rw=read",      "--bs=1m", "--iodepth=8"]),
-        ("seqwrite-1m",  ["--rw=write",     "--bs=1m", "--iodepth=8"]),
-        ("syncwrite-4k", ["--rw=randwrite", "--bs=4k", "--iodepth=1", "--fsync=1"]),
-    ]
-    for name, extra in jobs:
-        testfile.unlink(missing_ok=True)  # fresh file per job: no stale layout from a previous job/run
-        r = run_bench(["fio", "--name", name, f"--filename={testfile}", "--size=1g",
-                       "--runtime=30", "--time_based", "--ioengine=libaio", "--direct=1",
-                       "--group_reporting", "--output-format=json"] + extra)
-        side = json.loads(r.stdout)["jobs"][0]["write" if "write" in name else "read"]
-        if name.startswith("seq"):
-            out[f"{name}.bw_mbps"] = (side["bw_bytes"] / 1e6, "higher")
-        else:
-            out[f"{name}.iops"] = (side["iops"], "higher")
-        out[f"{name}.p99_lat_us"] = (side["clat_ns"]["percentile"]["99.000000"] / 1000, "lower")
-    testfile.unlink(missing_ok=True)
-    return out
-
-def _bench_schbench(mthreads, workers):
-    """Scheduler wakeup + request latency p50/p99/p99.9 + avg rps."""
-    # long runtime + warmup: p99/p99.9 need many requests per run to converge
-    r = run_bench(["schbench", "-m", mthreads, "-t", workers, "-r", "120", "-w", "5"])
-    text = r.stdout + r.stderr  # schbench prints to stderr
-    out = {}
-    wake, _, req = text.partition("Request Latencies")  # old format: no marker -> req empty
-    req = req.partition("RPS percentiles")[0]
-    for prefix, block in (("wake_", wake), ("req_", req)):
-        for pct, val in re.findall(r"\*?\s*(\d+\.\d)th:\s+(\d+)", block):
-            if pct in ("50.0", "99.0", "99.9") and f"{prefix}p{pct}_us" not in out:
-                out[f"{prefix}p{pct}_us"] = (int(val), "lower")
-    out["avg_rps"] = (parse(r"average rps:\s+([\d.]+)", r, "schbench rps"), "higher")
-    return out
-
-def bench_schbench_heavy():
-    """2x oversubscribed (CPU saturated): rps + req latency are the meaningful
-    metrics, wake latency just reads back preemption granularity."""
-    return _bench_schbench(2, NPROC)
-
-def bench_schbench_light():
-    """Underloaded (N/2 workers): wake latency measures scheduler responsiveness."""
-    return _bench_schbench(1, max(1, NPROC // 2))
-
-def _bench_memory(blk):
-    """Memory bandwidth via sysbench. 256K block = cache regime, 64M = DRAM regime;
-    1M blocks sit exactly on the RPi4 L2 size, where page-coloring luck swings
-    results by ±15% per run — these two sizes are stable to <1%."""
-    out = {}
-    for op in ("read", "write"):
-        r = run_bench(["sysbench", "memory", f"--memory-block-size={blk}",
-                       "--memory-total-size=20G", f"--memory-oper={op}", "run"])
-        out[f"{op}.bw_mibps"] = (parse(r"\(([\d.]+) MiB/sec\)", r, f"sysbench {op}"), "higher")
-    return out
-
-def bench_net():
-    """Loopback TCP Gbps (plain + zero-copy), 64B UDP pps (1 + N streams)."""
-    bw = lambda e: ("bw_gbps", e["sum_received"]["bits_per_second"] / 1e9)
-    pps = lambda e: ("pps", e["sum"]["packets"] / e["sum"]["seconds"])
-    udp = ["-u", "-b", "0", "-l", "64"]
-    out = {}
-    for name, extra, metric in [
-        ("tcp",           [],                  bw),
-        ("tcp-zc",        ["-Z"],              bw),   # zero-copy (sendfile) send path
-        ("udp-64b",       udp,                 pps),
-        ("udp-64b-multi", udp + ["-P", NPROC], pps),
-    ]:
-        srv = subprocess.Popen(["iperf3", "-s", "-1", "-p", "5210"],
-                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        time.sleep(0.3)  # let server bind
-        try:
-            r = run_bench(["iperf3", "-c", "127.0.0.1", "-p", "5210", "-t", "10", "-J"] + extra)
-        finally:
-            srv.terminate()  # no-op if -1 already let it exit; kills it if the client failed
-            srv.wait()
-        k, v = metric(json.loads(r.stdout)["end"])
-        out[f"{name}.{k}"] = (v, "higher")
-    return out
-
-def _perf_usecs(*args):
-    r = run_bench(["perf", "bench", *args])
-    return {"usecs_op": (parse(r"([\d.]+) usecs/op", r, f"perf {args[0]}"), "lower")}
-
-def bench_ipc():
-    """Scheduler+IPC throughput, hackbench-style (perf bench sched messaging)."""
-    r = run_bench(["perf", "bench", "sched", "messaging", "-g", "10", "-l", "1000"])
-    return {"total_s": (parse(r"Total time:\s+([\d.]+)", r, "perf messaging"), "lower")}
-
-CG_ROOT = Path("/sys/fs/cgroup")
-PIPE_DEPTHS = (0, 1, 8)  # root, systemd-service-like, container-like nesting
-
-def _in_cgroup(leaf, cpu=None):
-    """preexec_fn: move the child into cgroup LEAF (and pin it to CPU) before exec.
-    Everything perf forks inherits both."""
-    def pre():
-        if cpu is not None:
-            os.sched_setaffinity(0, {cpu})
-        (leaf / "cgroup.procs").write_text(str(os.getpid()))
-    return pre
-
-def _nested_cgroup(depth):
-    """/sys/fs/cgroup/kbench-d<depth>/l2/.../l<depth> with the cpu controller
-    enabled at every level (one cfs_rq per level). Returns the leaf."""
-    path = CG_ROOT
-    for i in range(depth):
-        (path / "cgroup.subtree_control").write_text("+cpu")  # idempotent
-        path = path / (f"kbench-d{depth}" if i == 0 else f"l{i + 1}")
-        path.mkdir(exist_ok=True)
-    return path
-
-def _rm_cgroup(leaf, depth):
-    for _ in range(depth):
-        for _ in range(50):  # exiting children linger in cgroup.procs for a moment
-            try:
-                leaf.rmdir()
-                break
-            except OSError:
-                time.sleep(0.02)
-        leaf = leaf.parent
-
-def bench_perf_pipe():
-    """perf bench sched pipe pinned to one CPU, so every message is one
-    dequeue+enqueue+pick, run from the root cgroup and from leaves 1 and 8
-    cpu-cgroup levels deep: d0 is the bare wakeup path, d1-d0 the cost of
-    group scheduling, d8-d1 how it scales with nesting (CONFIG_FAIR_GROUP_SCHED).
-    Needs root for the cgroup writes."""
-    if os.geteuid():
-        raise RuntimeError("needs root (creates cgroups under /sys/fs/cgroup)")
-    if "cpu" not in (CG_ROOT / "cgroup.controllers").read_text().split():
-        raise RuntimeError("cgroup v2 cpu controller not available")
-    out = {}
-    for depth in PIPE_DEPTHS:
-        leaf = _nested_cgroup(depth)
-        try:
-            r = run_bench(["perf", "bench", "sched", "pipe", "-l", 1000000],
-                          preexec_fn=_in_cgroup(leaf, cpu=NPROC - 1))
-            out[f"d{depth}.usecs_op"] = (parse(r"([\d.]+) usecs/op", r, "perf pipe"), "lower")
-        finally:
-            _rm_cgroup(leaf, depth)
-    return out
-
-def _stressng(stressor):
-    """bogo ops/s (real time) for one stress-ng stressor, N workers x 15s."""
-    r = run_bench(["stress-ng", f"--{stressor}", NPROC, "-t", "15", "--metrics-brief"])
-    v = parse(rf"{stressor}\s+\d+\s+[\d.]+\s+[\d.]+\s+[\d.]+\s+([\d.]+)",  # 5th col = bogo ops/s (real)
-              r, f"stress-ng {stressor}")
-    return {"bogo_ops_s": (v, "higher")}
-
-# 9 reps: these are governor-sensitive, median over 9 keeps the estimate stable.
-BENCHMARKS = {
-    "fio":        {"needs": "fio",       "fn": bench_fio},
-    "schbench-heavy": {"needs": "schbench", "fn": bench_schbench_heavy, "repeat": 9},
-    "schbench-light": {"needs": "schbench", "fn": bench_schbench_light},
-    "memory-256k": {"needs": "sysbench", "fn": lambda: _bench_memory("256K")},
-    "memory-64m":  {"needs": "sysbench", "fn": lambda: _bench_memory("64M")},
-    "net":        {"needs": "iperf3",    "fn": bench_net},
-    "syscall":    {"needs": "perf",      "fn": lambda: _perf_usecs("syscall", "basic")},
-    "ipc":        {"needs": "perf",      "fn": bench_ipc},
-    "perf-pipe":  {"needs": "perf",      "fn": bench_perf_pipe},
-    "pagefault":  {"needs": "stress-ng", "fn": lambda: _stressng("fault")},
-    "fork":       {"needs": "stress-ng", "fn": lambda: _stressng("fork")},
-}
+# Workloads live in workload/*.py; each exports BENCHMARKS = {name: {needs, fn[, repeat]}}
+# where fn() returns {metric: (value, "higher"|"lower")}. aggregate() folds REPEAT of
+# those into the stored {metric: {value, std, better}} form. Run a file directly to
+# execute its benchmarks once without saving anything.
+sys.path.insert(0, str(ROOT / "workload"))
+BENCHMARKS = {}
+for _f in sorted((ROOT / "workload").glob("*.py")):
+    if _f.stem == "common":
+        continue
+    _spec = importlib.util.spec_from_file_location(_f.stem.replace("-", "_"), _f)
+    _mod = importlib.util.module_from_spec(_spec)
+    _spec.loader.exec_module(_mod)
+    BENCHMARKS.update(_mod.BENCHMARKS)
+from common import NPROC
 
 def aggregate(runs):
     """REPEAT runs of {metric: (value, better)} -> {metric: {value, std, better}}."""
