@@ -27,10 +27,15 @@
   td.plot { width: 240px; padding: .2rem .4rem; }
   svg { width: 240px; height: auto; display: block; font: 9px system-ui, sans-serif; }
   svg .gl { stroke: #e1e0d9; }
+  svg .goodedge { stroke: #898781; stroke-width: 3; }
   svg .tick { fill: #898781; text-anchor: end; dominant-baseline: middle; }
   svg .x { text-anchor: middle; dominant-baseline: auto; }
-  svg .line { fill: none; stroke: #2a78d6; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
-  svg .dot { fill: #2a78d6; stroke: #fff; stroke-width: 2; }
+  svg .line { stroke-width: 2; stroke-linecap: round; }
+  svg .good { stroke: #0ca30c; }
+  svg .bad { stroke: #d03b3b; }
+  svg .flat { stroke: #898781; }
+  svg .weak { stroke-opacity: .45; }
+  svg .dot { fill: #52514e; stroke: #fff; stroke-width: 2; }
 </style>
 <h1>kbench report</h1>
 <p class="bar">
@@ -208,7 +213,7 @@ function renderCompare() {
 const SHORT = n => n.replace(/-g[0-9a-f]{8}-[0-9a-f]{8}/, "");  // 7.3.0-rc5-g946fd1ce-100638f0_n5 → 7.3.0-rc5_n5
 const TAG = n => n.match(/_n\d+$/)?.[0].slice(1) ?? SHORT(n);   // x-axis label: n5
 
-function plot(pts) {  // pts: [{run, value?, std?}] in x order; gaps where a run lacks the metric
+function plot(pts, better, bench) {  // pts: [{run, value?, std?}] in x order; gaps where a run lacks the metric
   const W = 240, H = 64, L = 40, R = 8, T = 6, B = 14;
   const vs = pts.map(p => p.value).filter(v => v != null);
   let lo = Math.min(...vs), hi = Math.max(...vs);
@@ -216,14 +221,21 @@ function plot(pts) {  // pts: [{run, value?, std?}] in x order; gaps where a run
   lo -= pad; hi += pad;
   const x = i => L + i * (W - L - R) / Math.max(pts.length - 1, 1);
   const y = v => T + (hi - v) / (hi - lo) * (H - T - B);
+  const up = better === "higher";
   let s = "";
-  for (const v of [lo, hi])
-    s += `<line class="gl" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/>` +
+  for (const v of [lo, hi])  // the baseline on the "good" edge is drawn heavier
+    s += `<line class="gl${(v === hi) === up ? " goodedge" : ""}" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/>` +
          `<text class="tick" x="${L - 4}" y="${y(v)}">${+v.toPrecision(3)}</text>`;
-  let d = "", pen = false;
-  pts.forEach((p, i) => { if (p.value == null) { pen = false; return; }
-    d += `${pen ? "L" : "M"}${x(i)},${y(p.value)} `; pen = true; });
-  s += `<path class="line" d="${d}"/>`;
+  // each segment is colored by direction: green toward "good", red away from it, gray when flat.
+  // Faded unless the step is a confirmed regression/improvement (same verdict as the table).
+  for (let i = 1; i < pts.length; i++) {
+    const a = pts[i - 1], b = pts[i];
+    if (a.value == null || b.value == null) continue;  // break the line across a missing run
+    const dir = Math.sign(b.value - a.value) * (up ? 1 : -1);
+    const cls = dir > 0 ? "good" : dir < 0 ? "bad" : "flat";
+    const weak = a.value && judge(b, a, bench).cls ? "" : " weak";
+    s += `<line class="line ${cls}${weak}" x1="${x(i - 1)}" y1="${y(a.value)}" x2="${x(i)}" y2="${y(b.value)}"/>`;
+  }
   pts.forEach((p, i) => {
     s += `<text class="tick x" x="${x(i)}" y="${H - 3}">${TAG(p.run)}</text>`;
     if (p.value != null)
@@ -252,7 +264,7 @@ function renderOverview() {
       cells += `<td class="num">${cell}</td>`;
       if (p.value != null) prev = p;
     }
-    rows += `<tr><td>${bench}</td><td>${metric} <span class="sys" title="${better} is better">${better === "higher" ? "↑" : "↓"}</span></td>${cells}<td class="plot">${plot(pts)}</td></tr>`;
+    rows += `<tr><td>${bench}</td><td>${metric} <span class="sys" title="${better} is better">${better === "higher" ? "↑" : "↓"}</span></td>${cells}<td class="plot">${plot(pts, better, bench)}</td></tr>`;
   }
   const head = `<tr><th>benchmark</th><th>metric</th>${runs.map(n => `<th class="run" title="${n}">${SHORT(n)}</th>`).join("")}<th>trend</th></tr>`;
   $("out").innerHTML = `<table>${head}${rows}</table>` +
