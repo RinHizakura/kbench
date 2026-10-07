@@ -7,8 +7,9 @@
   h1 { font-size: 1.4rem; }
   .bar { display: flex; flex-wrap: wrap; gap: .6rem 1.2rem; align-items: end; }
   .bar label { display: flex; flex-direction: column; gap: .15rem; font-size: .8rem; color: #666; }
+  .bar label[hidden] { display: none; }
   .bar a { padding-bottom: .2rem; white-space: nowrap; }
-  select { font: 15px/1.4 system-ui, sans-serif; padding: .2rem; max-width: 100%; }
+  select, input { font: 15px/1.4 system-ui, sans-serif; padding: .2rem; max-width: 100%; }
   table { border-collapse: collapse; margin-top: 1rem; width: 100%; }
   th, td { text-align: left; padding: .35rem .7rem; border-bottom: 1px solid #ddd; }
   th { border-bottom: 2px solid #999; }
@@ -21,13 +22,24 @@
   #cfg summary { font-size: .85rem; color: #666; cursor: pointer; margin-top: .5rem; }
   td.diff { background: #fff3cd; }
   td span[title] { text-decoration: underline dotted #999; cursor: help; }
+  th.run { font-size: .8rem; font-weight: 500; }
+  body.ov { max-width: 80rem; }
+  td.plot { width: 240px; padding: .2rem .4rem; }
+  svg { width: 240px; height: auto; display: block; font: 9px system-ui, sans-serif; }
+  svg .gl { stroke: #e1e0d9; }
+  svg .tick { fill: #898781; text-anchor: end; dominant-baseline: middle; }
+  svg .x { text-anchor: middle; dominant-baseline: auto; }
+  svg .line { fill: none; stroke: #2a78d6; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+  svg .dot { fill: #2a78d6; stroke: #fff; stroke-width: 2; }
 </style>
 <h1>kbench report</h1>
 <p class="bar">
   <label>platform <select id="plat"></select></label>
+  <label>view <select id="view"><option value="compare">compare</option><option value="overview">overview</option></select></label>
   <label>current <select id="cur"></select></label>
   <label>compare with <select id="base"></select></label>
   <label>benchmark <select id="bench"></select></label>
+  <label>last runs <input id="last" type="number" min="2" step="1" placeholder="all" style="width:4.5em"></label>
   <a id="hwlink" href="platform.html">platform info</a>
 </p>
 <div id="sys"></div>
@@ -37,7 +49,7 @@
 const THRESHOLD = 12;  // flag as regression if worse than baseline by this %
 // tighter per-benchmark thresholds for metrics whose run-to-run noise is ~1%
 const THRESHOLDS = { "perf-pipe": 3, "syscall": 3 };
-const q = new URLSearchParams(location.search);  // ?platform=<dir>&cur=<run>&base=<run> deep-links a comparison
+const q = new URLSearchParams(location.search);  // ?platform=<dir>&cur=<run>&base=<run> deep-links a comparison; &view=overview for all runs
 const $ = id => document.getElementById(id);
 const opts = { cache: "no-cache" };  // Pages sends max-age=600; revalidate so fresh runs show up immediately
 const platforms = await (await fetch("data/platforms.json", opts)).json();
@@ -56,6 +68,8 @@ $("base").value = q.get("base") ?? names[1] ?? "";  // default: newest vs previo
 $("bench").add(new Option("— all —", ""));
 for (const b of [...new Set(names.flatMap(n => Object.keys(DATA[n].benchmarks)))].sort())
   $("bench").add(new Option(b, b));
+$("view").value = q.get("view") ?? "compare";
+$("last").value = q.get("last") ?? "";  // overview only: show just the newest N runs (empty = all)
 
 function metrics(r) {
   const out = [];
@@ -110,58 +124,67 @@ async function cfgDiff(cur, base) {
     `<table><tr><th>option</th><th>current</th><th>compare with</th></tr>${rows}</table></details>`;
 }
 
-function render() {
+// metric visibility: optional benchmark filter, plus the schbench split —
+// schbench-heavy is saturated: rps + req latency are meaningful, wake latency
+// just reads back preemption granularity. schbench-light is underloaded: wake
+// latency measures scheduler responsiveness, req/rps just reflect offered load.
+const shown = (bench, metric) =>
+  (!$("bench").value || bench === $("bench").value) &&
+  !(bench === "schbench-heavy" && metric.startsWith("wake_")) &&
+  !(bench === "schbench-light" && !metric.startsWith("wake_"));
+
+// hover popup: per-rep samples, plus per-rep [start→max] °C and min MHz when the run recorded them
+const fmt = (m, run, bench) => {
+  if (!m.samples) return m.value + (m.std ? ` <span class="sys">±${m.std}</span>` : "");
+  let tip = `runs: ${m.samples.join(", ")}`;
+  const t = run?.temps_c?.[bench], f = run?.freqs_mhz?.[bench];
+  if (t) tip += `&#10;temp °C: ${t.map(p => Array.isArray(p) ? `${p[0]}→${p[1]}` : p).join(", ")}`;
+  if (f) tip += `&#10;MHz: ${f.map(p => Array.isArray(p) ? (p[0] === p[1] ? p[0] : `${p[0]}–${p[1]}`) : p).join(", ")}`;
+  return `<span title="${tip}">${m.value}</span>` + (m.std ? ` <span class="sys">±${m.std}</span>` : "");
+};
+
+// verdict for metric m against baseline bm: delta %, confidence the delta is real, status.
+function judge(m, bm, bench) {
+  const d = (m.value - bm.value) / bm.value * 100;
+  const thr = THRESHOLDS[bench] ?? THRESHOLD;
+  // confidence the delta is real: Mann-Whitney rank test on the raw samples.
+  // Latency metrics may be bimodal. The median flips modes on a single rep, and a
+  // mean/std z-test on that flip reports false 99% confidence. Ranks don't care
+  // which mode the median lands in.
+  const erf = x => { const t = 1 / (1 + 0.3275911 * x);
+    return 1 - ((((1.061405429 * t - 1.453152027) * t + 1.421413741) * t
+                 - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x); };
+  let conf = 0;
+  if (m.samples?.length > 1 && bm.samples?.length > 1) {
+    let u = 0;
+    for (const x of m.samples) for (const y of bm.samples) u += x > y ? 1 : x === y ? 0.5 : 0;
+    const n = m.samples.length, k = bm.samples.length;
+    // ponytail: normal approx, no tie correction — slightly conservative at n=9, fine for flagging
+    const z = Math.abs(u - n * k / 2) / Math.sqrt(n * k * (n + k + 1) / 12);
+    conf = erf(z / Math.SQRT2);
+  }
+  const sig = conf > 0.95;
+  const worse = sig && (m.better === "higher" ? d < -thr : d > thr);
+  const better = sig && (m.better === "higher" ? d > thr : d < -thr);
+  return { d, thr, conf, cls: worse ? "reg" : better ? "imp" : "",
+           st: worse ? "REGRESSION" : better ? "improved" : !sig && Math.abs(d) > thr ? "unconfirmed" : "–" };
+}
+
+function renderCompare() {
   const cur = DATA[$("cur").value], base = DATA[$("base").value] || null;
   $("sys").innerHTML = sysTable(cur, base);
   cfgDiff(cur, base);
   let rows = "";
-  // hover popup: per-rep samples, plus per-rep [start→max] °C and min MHz when the run recorded them
-  const fmt = (m, run, bench) => {
-    if (!m.samples) return m.value + (m.std ? ` <span class="sys">±${m.std}</span>` : "");
-    let tip = `runs: ${m.samples.join(", ")}`;
-    const t = run?.temps_c?.[bench], f = run?.freqs_mhz?.[bench];
-    if (t) tip += `&#10;temp °C: ${t.map(p => Array.isArray(p) ? `${p[0]}→${p[1]}` : p).join(", ")}`;
-    if (f) tip += `&#10;MHz: ${f.map(p => Array.isArray(p) ? (p[0] === p[1] ? p[0] : `${p[0]}–${p[1]}`) : p).join(", ")}`;
-    return `<span title="${tip}">${m.value}</span>` + (m.std ? ` <span class="sys">±${m.std}</span>` : "");
-  };
   // notes are keyed by comparison pair: run.notes[<other run key>][bench.metric],
   // shown for that pair in either direction
   const pairNotes = base && (cur.notes?.[$("base").value] || base.notes?.[$("cur").value]) || {};
   for (const [bench, metric, m] of metrics(cur)) {
-    if ($("bench").value && bench !== $("bench").value) continue;
-    // schbench-heavy is saturated: rps + req latency are meaningful, wake latency
-    // just reads back preemption granularity. schbench-light is underloaded: wake
-    // latency measures scheduler responsiveness, req/rps just reflect offered load.
-    if (bench === "schbench-heavy" && metric.startsWith("wake_")) continue;
-    if (bench === "schbench-light" && !metric.startsWith("wake_")) continue;
+    if (!shown(bench, metric)) continue;
     const bm = base?.benchmarks[bench]?.[metric];
     let cells = `<td class="num">${fmt(m, cur, bench)}</td>`;
     if (base) {
       if (bm && bm.value) {
-        const d = (m.value - bm.value) / bm.value * 100;
-        const thr = THRESHOLDS[bench] ?? THRESHOLD;
-        // confidence the delta is real: Mann-Whitney rank test on the raw samples.
-        // Latency metrics may be bimodal. The median flips modes on a single rep, and a
-        // mean/std z-test on that flip reports false 99% confidence. Ranks don't care
-        // which mode the median lands in.
-        const erf = x => { const t = 1 / (1 + 0.3275911 * x);
-          return 1 - ((((1.061405429 * t - 1.453152027) * t + 1.421413741) * t
-                       - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x); };
-        let conf = 0;
-        if (m.samples?.length > 1 && bm.samples?.length > 1) {
-          let u = 0;
-          for (const x of m.samples) for (const y of bm.samples) u += x > y ? 1 : x === y ? 0.5 : 0;
-          const n = m.samples.length, k = bm.samples.length;
-          // ponytail: normal approx, no tie correction — slightly conservative at n=9, fine for flagging
-          const z = Math.abs(u - n * k / 2) / Math.sqrt(n * k * (n + k + 1) / 12);
-          conf = erf(z / Math.SQRT2);
-        }
-        const sig = conf > 0.95;
-        const worse = sig && (m.better === "higher" ? d < -thr : d > thr);
-        const better = sig && (m.better === "higher" ? d > thr : d < -thr);
-        const cls = worse ? "reg" : better ? "imp" : "";
-        const st = worse ? "REGRESSION" : better ? "improved"
-                 : !sig && Math.abs(d) > thr ? "unconfirmed" : "–";
+        const { d, thr, conf, cls, st } = judge(m, bm, bench);
         cells = cells + `<td class="num">${fmt(bm, base, bench)}</td>` +
                 `<td class="num ${cls}">${d > 0 ? "+" : ""}${d.toFixed(1)}%</td>` +
                 `<td class="num ${cls}">${Math.abs(d) > thr ? (conf * 100).toFixed(0) + "%" : "–"}</td><td class="${cls}">${st}</td>` +
@@ -179,6 +202,70 @@ function render() {
     .map(([n, why]) => `<p class="sys">skipped ${n}: ${why}</p>`).join("");
   $("out").innerHTML = `<table>${head}${rows}</table>${skipped}`;
 }
-$("cur").onchange = $("base").onchange = $("bench").onchange = render;
+
+// overview: every run, oldest → newest. One table (value + % vs previous run)
+// and one single-series line plot per metric.
+const SHORT = n => n.replace(/-g[0-9a-f]{8}-[0-9a-f]{8}/, "");  // 7.3.0-rc5-g946fd1ce-100638f0_n5 → 7.3.0-rc5_n5
+const TAG = n => n.match(/_n\d+$/)?.[0].slice(1) ?? SHORT(n);   // x-axis label: n5
+
+function plot(pts) {  // pts: [{run, value?, std?}] in x order; gaps where a run lacks the metric
+  const W = 240, H = 64, L = 40, R = 8, T = 6, B = 14;
+  const vs = pts.map(p => p.value).filter(v => v != null);
+  let lo = Math.min(...vs), hi = Math.max(...vs);
+  const pad = (hi - lo || Math.abs(hi) || 1) * .15;  // y is the data range, not zero-based: relative drift is the point
+  lo -= pad; hi += pad;
+  const x = i => L + i * (W - L - R) / Math.max(pts.length - 1, 1);
+  const y = v => T + (hi - v) / (hi - lo) * (H - T - B);
+  let s = "";
+  for (const v of [lo, hi])
+    s += `<line class="gl" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/>` +
+         `<text class="tick" x="${L - 4}" y="${y(v)}">${+v.toPrecision(3)}</text>`;
+  let d = "", pen = false;
+  pts.forEach((p, i) => { if (p.value == null) { pen = false; return; }
+    d += `${pen ? "L" : "M"}${x(i)},${y(p.value)} `; pen = true; });
+  s += `<path class="line" d="${d}"/>`;
+  pts.forEach((p, i) => {
+    s += `<text class="tick x" x="${x(i)}" y="${H - 3}">${TAG(p.run)}</text>`;
+    if (p.value != null)
+      s += `<circle class="dot" cx="${x(i)}" cy="${y(p.value)}" r="4"><title>${p.run}: ${p.value}${p.std ? ` ±${p.std}` : ""}</title></circle>`;
+  });
+  return `<svg viewBox="0 0 ${W} ${H}">${s}</svg>`;
+}
+
+function renderOverview() {
+  $("sys").innerHTML = $("cfg").innerHTML = "";
+  const n = +$("last").value;
+  const runs = [...names].reverse().slice(n >= 2 ? -n : 0);
+  const keys = new Map();  // "bench.metric" → [bench, metric, better], first-seen order
+  for (const n of runs) for (const [b, m, v] of metrics(DATA[n]))
+    if (shown(b, m)) keys.set(`${b}.${m}`, [b, m, v.better]);
+  let rows = "";
+  for (const [bench, metric, better] of keys.values()) {
+    const pts = runs.map(n => ({ run: n, ...(DATA[n].benchmarks[bench]?.[metric] ?? {}) }));
+    let cells = "", prev = null;
+    for (const p of pts) {
+      let cell = p.value != null ? fmt(p, DATA[p.run], bench) : "–";
+      if (p.value != null && prev?.value) {
+        const { d, cls } = judge(p, prev, bench);
+        cell += `<div class="sys ${cls}">${d > 0 ? "+" : ""}${d.toFixed(1)}%</div>`;
+      }
+      cells += `<td class="num">${cell}</td>`;
+      if (p.value != null) prev = p;
+    }
+    rows += `<tr><td>${bench}</td><td>${metric} <span class="sys" title="${better} is better">${better === "higher" ? "↑" : "↓"}</span></td>${cells}<td class="plot">${plot(pts)}</td></tr>`;
+  }
+  const head = `<tr><th>benchmark</th><th>metric</th>${runs.map(n => `<th class="run" title="${n}">${SHORT(n)}</th>`).join("")}<th>trend</th></tr>`;
+  $("out").innerHTML = `<table>${head}${rows}</table>` +
+    `<p class="sys">% is vs the previous run that has the metric; colored only when confirmed past the threshold, as in compare view. ↑/↓ = which direction is better.</p>`;
+}
+
+function render() {
+  const ov = $("view").value === "overview";
+  $("cur").parentElement.hidden = $("base").parentElement.hidden = ov;
+  $("last").parentElement.hidden = !ov;
+  document.body.classList.toggle("ov", ov);
+  ov ? renderOverview() : renderCompare();
+}
+$("view").onchange = $("cur").onchange = $("base").onchange = $("bench").onchange = $("last").oninput = render;
 render();
 </script>
