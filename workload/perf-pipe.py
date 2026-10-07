@@ -1,11 +1,11 @@
 """Wakeup-path cost vs cgroup nesting depth: perf bench sched pipe pinned to one CPU,
-run from the root cgroup and from leaves 1 and 8 cpu-cgroup levels deep. Needs root."""
+run from the root cgroup and from a leaf 16 cpu-cgroup levels deep. Needs root."""
 import os, time
 from pathlib import Path
 from common import NPROC, run_bench, parse, main
 
 CG_ROOT = Path("/sys/fs/cgroup")
-PIPE_DEPTHS = (0, 1, 8)  # root, systemd-service-like, container-like nesting
+PIPE_DEPTHS = (0, 16)  # root vs deep nesting; the delta is the per-level hierarchy cost x16
 
 def _in_cgroup(leaf, cpu=None):
     """preexec_fn: move the child into cgroup LEAF (and pin it to CPU) before exec.
@@ -38,9 +38,9 @@ def _rm_cgroup(leaf, depth):
 
 def bench_perf_pipe():
     """perf bench sched pipe pinned to one CPU, so every message is one
-    dequeue+enqueue+pick, run from the root cgroup and from leaves 1 and 8
-    cpu-cgroup levels deep: d0 is the bare wakeup path, d1-d0 the cost of
-    group scheduling, d8-d1 how it scales with nesting (CONFIG_FAIR_GROUP_SCHED).
+    dequeue+enqueue+pick, run from the root cgroup and from a leaf 16
+    cpu-cgroup levels deep: d0 is the bare wakeup path, d16-d0 the cost of
+    walking the cfs_rq hierarchy (CONFIG_FAIR_GROUP_SCHED) amplified 16x.
     Needs root for the cgroup writes."""
     if os.geteuid():
         raise RuntimeError("needs root (creates cgroups under /sys/fs/cgroup)")

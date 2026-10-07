@@ -29,7 +29,7 @@ print its metrics without saving anything (e.g. `sudo python3 workload/perf-pipe
 | net        | iperf3      | loopback TCP Gbps (plain + zero-copy), 64B UDP pps (1 + N streams)       |
 | syscall    | perf        | syscall entry/exit overhead                                              |
 | ipc        | perf        | scheduler+IPC throughput (hackbench-style)                               |
-| perf-pipe  | perf       | pinned pipe ping-pong wakeup cost from the root cgroup and 1 / 8 cpu-cgroup levels deep (creates cgroups, so run as root) |
+| perf-pipe  | perf       | pinned pipe ping-pong wakeup cost from the root cgroup and 16 cpu-cgroup levels deep (creates cgroups, so run as root) |
 | pagefault  | stress-ng   | page-fault rate                                                          |
 | fork       | stress-ng   | fork/exec rate                                                           |
 
