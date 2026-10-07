@@ -35,6 +35,8 @@
 <div id="out"></div>
 <script type="module">
 const THRESHOLD = 12;  // flag as regression if worse than baseline by this %
+// tighter per-benchmark thresholds for metrics whose run-to-run noise is ~1%
+const THRESHOLDS = { "perf-pipe": 3, "syscall": 3 };
 const q = new URLSearchParams(location.search);  // ?platform=<dir>&cur=<run>&base=<run> deep-links a comparison
 const $ = id => document.getElementById(id);
 const opts = { cache: "no-cache" };  // Pages sends max-age=600; revalidate so fresh runs show up immediately
@@ -137,6 +139,7 @@ function render() {
     if (base) {
       if (bm && bm.value) {
         const d = (m.value - bm.value) / bm.value * 100;
+        const thr = THRESHOLDS[bench] ?? THRESHOLD;
         // confidence the delta is real: Mann-Whitney rank test on the raw samples.
         // Latency metrics may be bimodal. The median flips modes on a single rep, and a
         // mean/std z-test on that flip reports false 99% confidence. Ranks don't care
@@ -154,14 +157,14 @@ function render() {
           conf = erf(z / Math.SQRT2);
         }
         const sig = conf > 0.95;
-        const worse = sig && (m.better === "higher" ? d < -THRESHOLD : d > THRESHOLD);
-        const better = sig && (m.better === "higher" ? d > THRESHOLD : d < -THRESHOLD);
+        const worse = sig && (m.better === "higher" ? d < -thr : d > thr);
+        const better = sig && (m.better === "higher" ? d > thr : d < -thr);
         const cls = worse ? "reg" : better ? "imp" : "";
         const st = worse ? "REGRESSION" : better ? "improved"
-                 : !sig && Math.abs(d) > THRESHOLD ? "unconfirmed" : "–";
+                 : !sig && Math.abs(d) > thr ? "unconfirmed" : "–";
         cells = cells + `<td class="num">${fmt(bm, base, bench)}</td>` +
                 `<td class="num ${cls}">${d > 0 ? "+" : ""}${d.toFixed(1)}%</td>` +
-                `<td class="num ${cls}">${Math.abs(d) > THRESHOLD ? (conf * 100).toFixed(0) + "%" : "–"}</td><td class="${cls}">${st}</td>` +
+                `<td class="num ${cls}">${Math.abs(d) > thr ? (conf * 100).toFixed(0) + "%" : "–"}</td><td class="${cls}">${st}</td>` +
                 `<td class="sys">${pairNotes[`${bench}.${metric}`] || ""}</td>`;
       } else {
         cells = cells + `<td class="num">–</td><td class="num"></td><td class="num"></td><td>new</td><td></td>`;
