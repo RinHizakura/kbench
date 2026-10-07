@@ -148,6 +148,8 @@ const fmt = (m, run, bench) => {
   return `<span title="${tip}">${m.value}</span>` + (m.std ? ` <span class="sys">±${m.std}</span>` : "");
 };
 
+const arrow = better => `<span class="sys" title="${better} is better">${better === "higher" ? "↑" : "↓"}</span>`;
+
 // verdict for metric m against baseline bm: delta %, confidence the delta is real, status.
 function judge(m, bm, bench) {
   const d = (m.value - bm.value) / bm.value * 100;
@@ -198,14 +200,14 @@ function renderCompare() {
         cells = cells + `<td class="num">–</td><td class="num"></td><td class="num"></td><td>new</td><td></td>`;
       }
     }
-    rows += `<tr><td>${bench}</td><td>${metric}</td>${cells}</tr>`;
+    rows += `<tr><td>${bench}</td><td>${metric} ${arrow(m.better)}</td>${cells}</tr>`;
   }
   const head = base
     ? "<tr><th>benchmark</th><th>metric</th><th>current</th><th>compare with</th><th>delta</th><th>confidence</th><th>status</th><th>note</th></tr>"
     : "<tr><th>benchmark</th><th>metric</th><th>value</th></tr>";
   const skipped = Object.entries(cur.skipped || {})
     .map(([n, why]) => `<p class="sys">skipped ${n}: ${why}</p>`).join("");
-  $("out").innerHTML = `<table>${head}${rows}</table>${skipped}`;
+  $("out").innerHTML = `<table>${head}${rows}</table>${skipped}<p class="sys">↑/↓ = which direction is better.</p>`;
 }
 
 // overview: every run, oldest → newest. One table (value + % vs previous run)
@@ -264,7 +266,7 @@ function renderOverview() {
       cells += `<td class="num">${cell}</td>`;
       if (p.value != null) prev = p;
     }
-    rows += `<tr><td>${bench}</td><td>${metric} <span class="sys" title="${better} is better">${better === "higher" ? "↑" : "↓"}</span></td>${cells}<td class="plot">${plot(pts, better, bench)}</td></tr>`;
+    rows += `<tr><td>${bench}</td><td>${metric} ${arrow(better)}</td>${cells}<td class="plot">${plot(pts, better, bench)}</td></tr>`;
   }
   const head = `<tr><th>benchmark</th><th>metric</th>${runs.map(n => `<th class="run" title="${n}">${SHORT(n)}</th>`).join("")}<th>trend</th></tr>`;
   $("out").innerHTML = `<table>${head}${rows}</table>` +
