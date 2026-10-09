@@ -125,6 +125,34 @@ def sampled(fn):
     return (r, temps[0] if temps else None, max(temps) if temps else None,
             min(freqs) if freqs else None, max(freqs) if freqs else None)
 
+def cpu_busy(interval=3):
+    """Fraction of all CPU time that was not idle over INTERVAL seconds (iowait counts
+    as busy: disk DMA contends for the bus just like a core does)."""
+    def snap():
+        f = [int(x) for x in Path("/proc/stat").read_text().split("\n")[0].split()[1:]]
+        return f[3], sum(f)  # idle, total
+    i0, t0 = snap()
+    time.sleep(interval)
+    i1, t1 = snap()
+    return 1 - (i1 - i0) / (t1 - t0)
+
+def wait_quiet(max_busy=0.02, settle=2, timeout=900):
+    """Block until the machine has been idle for SETTLE consecutive 3s windows.
+    Returns the seconds waited; past TIMEOUT it warns and proceeds."""
+    t0, ok = time.time(), 0
+    while ok < settle:
+        busy = cpu_busy()
+        if busy <= max_busy:
+            ok += 1
+            continue
+        ok = 0
+        if time.time() - t0 > timeout:
+            print(f"WARN machine still {busy:.0%} busy after {timeout}s, running anyway", flush=True)
+            break
+        print(f"WAIT machine {busy:.1%} busy (want <= {max_busy:.0%}), waiting...", flush=True)
+        time.sleep(10)
+    return round(time.time() - t0)
+
 def sysinfo():
     info = {"kernel": os.uname().release, "date": datetime.now().isoformat(timespec="seconds")}
     for name, path in [("cmdline", "/proc/cmdline"),
@@ -157,7 +185,10 @@ def save_data(data):
 
 def cmd_run(only=None):
     only = only or [n for n in BENCHMARKS if n != "fio"]  # fio only runs when asked explicitly
+    waited = wait_quiet()
     result = {"sysinfo": sysinfo(), "benchmarks": {}, "skipped": {}}
+    if waited:
+        result["sysinfo"]["quiet_wait_s"] = waited  # nonzero = something was running when we started
     for name, b in BENCHMARKS.items():
         if only and name not in only:
             continue
