@@ -138,20 +138,21 @@ def cpu_busy(interval=3):
 
 def wait_quiet(max_busy=0.02, settle=2, timeout=900):
     """Block until the machine has been idle for SETTLE consecutive 3s windows.
-    Returns the seconds waited; past TIMEOUT it warns and proceeds."""
-    t0, ok = time.time(), 0
+    Returns the seconds spent waiting, 0 if every window passed (the settle windows
+    themselves do not count); past TIMEOUT it warns and proceeds."""
+    t0, ok, stalled = time.time(), 0, False
     while ok < settle:
         busy = cpu_busy()
         if busy <= max_busy:
             ok += 1
             continue
-        ok = 0
+        ok, stalled = 0, True
         if time.time() - t0 > timeout:
             print(f"WARN machine still {busy:.0%} busy after {timeout}s, running anyway", flush=True)
             break
         print(f"WAIT machine {busy:.1%} busy (want <= {max_busy:.0%}), waiting...", flush=True)
         time.sleep(10)
-    return round(time.time() - t0)
+    return round(time.time() - t0) if stalled else 0
 
 def sysinfo():
     info = {"kernel": os.uname().release, "date": datetime.now().isoformat(timespec="seconds")}
