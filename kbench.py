@@ -42,8 +42,8 @@ def aggregate(runs):
 # --- sysinfo ---
 
 def hwinfo():
-    """Fixed hardware facts (don't change with the kernel): board model,
-    cpu count, memory size, cache hierarchy. Rewritten on every run."""
+    """Hardware facts: board model, cpu count, memory size, cache hierarchy.
+    Rewritten on every run."""
     info = {"arch": os.uname().machine, "cpus": NPROC}
     for p in ("/proc/device-tree/model", "/sys/devices/virtual/dmi/id/product_name"):
         try:
@@ -84,9 +84,8 @@ def soc_temp():
         return None
 
 def cpu_freq_mhz():
-    """Actual CPU clock in MHz. cpuinfo_cur_freq asks the driver (firmware clock on
-    the RPi), so it shows firmware throttling the governor can't see. Root-only
-    file; falls back to passwordless sudo, None if neither works."""
+    """Actual CPU clock in MHz from cpuinfo_cur_freq (root-only; falls back to
+    passwordless sudo), None if neither works."""
     p = "/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq"
     try:
         return round(int(Path(p).read_text()) / 1000)
@@ -99,12 +98,7 @@ def cpu_freq_mhz():
 
 def sampled(fn):
     """Run fn() while sampling SoC temp + actual clock every 10s in a thread.
-    Returns (fn(), start_temp, max_temp, min_freq, max_freq) — start temp shows heat
-    carried in from the previous rep/run, max temp the peak under load, min freq
-    whether the firmware throttled mid-rep (< nominal means yes), max freq the
-    clock actually reached. Sampler cost is one sysfs read (+ a sudo cat for the
-    root-only freq file) per 10s — noise-level.
-    """
+    Returns (fn(), start_temp, max_temp, min_freq, max_freq)."""
     stop = threading.Event()
     temps, freqs = [], []
     def loop():
@@ -126,20 +120,19 @@ def sampled(fn):
             min(freqs) if freqs else None, max(freqs) if freqs else None)
 
 def cpu_busy(interval=3):
-    """Fraction of all CPU time that was not idle over INTERVAL seconds (iowait counts
-    as busy: disk DMA contends for the bus just like a core does)."""
+    """Fraction of all CPU time not idle over INTERVAL seconds (iowait counts as busy)."""
     def snap():
         f = [int(x) for x in Path("/proc/stat").read_text().split("\n")[0].split()[1:]]
-        return f[3], sum(f)  # idle, total
+        return f[3], sum(f[:8])  # idle, total (guest/guest_nice are already in user/nice)
     i0, t0 = snap()
     time.sleep(interval)
     i1, t1 = snap()
     return 1 - (i1 - i0) / (t1 - t0)
 
 def wait_quiet(max_busy=0.02, settle=2, timeout=900):
-    """Block until the machine has been idle for SETTLE consecutive 3s windows.
-    Returns the seconds spent waiting, 0 if every window passed (the settle windows
-    themselves do not count); past TIMEOUT it warns and proceeds."""
+    """Block until SETTLE consecutive cpu_busy() windows are <= MAX_BUSY, retrying
+    every 10s. Returns 0 if no window was busy, else the seconds spent; past
+    TIMEOUT it warns and proceeds."""
     t0, ok, stalled = time.time(), 0, False
     while ok < settle:
         busy = cpu_busy()
@@ -180,7 +173,7 @@ def load_data():
 
 def save_data(data):
     data_path().parent.mkdir(parents=True, exist_ok=True)
-    data_path().write_text(json.dumps(data, indent=2))  # indented: meant to be hand-editable
+    data_path().write_text(json.dumps(data, indent=2))
 
 # --- commands ---
 
@@ -211,8 +204,7 @@ def cmd_run(only=None):
                     freqs.append([fmin, fmax])
                 print("     -> " + "  ".join(f"{k}={round(v, 2)}" for k, (v, _) in runs[-1].items()), flush=True)
             result["benchmarks"][name] = aggregate(runs)
-            # per-rep [start, max] SoC temp + [min, max] actual clock, sampled every
-            # 10s during the rep — correlates latency modes with heat / firmware throttling
+            # per-rep [start, max] SoC temp + [min, max] actual clock, sampled every 10s
             if temps:
                 result.setdefault("temps_c", {})[name] = temps
             if freqs:
