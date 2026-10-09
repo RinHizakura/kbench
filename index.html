@@ -51,9 +51,9 @@
 <div id="cfg"></div>
 <div id="out"></div>
 <script type="module">
-const THRESHOLD = 12;  // flag as regression if worse than baseline by this %
-// tighter per-benchmark thresholds for metrics whose run-to-run noise is ~1%
-const THRESHOLDS = { "perf-pipe": 3, "syscall": 3 };
+// flag as regression/improved if past this % AND Mann-Whitney says the samples differ;
+// the rank test is what keeps bimodal tails out, so 3% is safe (checked on rpi4 n1-n5)
+const THRESHOLD = 3;
 const q = new URLSearchParams(location.search);  // ?platform=<dir>&cur=<run>&base=<run> deep-links a comparison; &view=overview for all runs
 const $ = id => document.getElementById(id);
 const opts = { cache: "no-cache" };  // Pages sends max-age=600; revalidate so fresh runs show up immediately
@@ -153,7 +153,7 @@ const arrow = better => `<span class="sys" title="${better} is better">${better 
 // verdict for metric m against baseline bm: delta %, confidence the delta is real, status.
 function judge(m, bm, bench) {
   const d = (m.value - bm.value) / bm.value * 100;
-  const thr = THRESHOLDS[bench] ?? THRESHOLD;
+  const thr = THRESHOLD;
   // confidence the delta is real: Mann-Whitney rank test on the raw samples.
   // Latency metrics may be bimodal. The median flips modes on a single rep, and a
   // mean/std z-test on that flip reports false 99% confidence. Ranks don't care
