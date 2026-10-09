@@ -3640,6 +3640,12 @@
           1800
         ]
       ]
+    },
+    "notes": {
+      "7.3.0-rc2-g9eae734f-df290809_n3": {
+        "net.udp-64b-multi.pps": "transient: back to rc2 level in rc5 (not bisected)",
+        "net.udp-64b.pps": "transient: back to rc2 level in rc5 (not bisected)"
+      }
     }
   },
   "7.3.0-rc5-g26f0d7eb-100638f0_n5": {

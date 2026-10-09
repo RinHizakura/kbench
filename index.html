@@ -212,7 +212,7 @@ function renderCompare() {
 
 // overview: every run, oldest → newest. One table (value + % vs previous run)
 // and one single-series line plot per metric.
-const SHORT = n => n.replace(/-g[0-9a-f]{8}-[0-9a-f]{8}/, "");  // 7.3.0-rc5-g946fd1ce-100638f0_n5 → 7.3.0-rc5_n5
+const SHORT = n => n.replace(/-g[0-9a-f]{8}-[0-9a-f]{8}/, "");  // 7.3.0-rc5-g26f0d7eb-100638f0_n5 → 7.3.0-rc5_n5
 const TAG = n => n.match(/_n\d+$/)?.[0].slice(1) ?? SHORT(n);   // x-axis label: n5
 
 function plot(pts, better, bench) {  // pts: [{run, value?, std?}] in x order; gaps where a run lacks the metric
