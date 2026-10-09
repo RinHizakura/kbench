@@ -52,7 +52,7 @@ def hwinfo():
         except OSError:
             pass
     m = re.search(r"MemTotal:\s+(\d+)", Path("/proc/meminfo").read_text())
-    info["mem_mib"] = round(int(m.group(1)) / 1024)
+    info["mem_gib"] = round(int(m.group(1)) / 2**20)  # MemTotal excludes kernel-reserved memory, which varies per kernel
     caches = {}
     for idx in sorted(Path("/sys/devices/system/cpu/cpu0/cache").glob("index*")):
         try:
@@ -127,23 +127,23 @@ def cpu_busy(interval=3):
     i0, t0 = snap()
     time.sleep(interval)
     i1, t1 = snap()
-    return 1 - (i1 - i0) / (t1 - t0)
+    return 1 - (i1 - i0) / max(t1 - t0, 1)
 
-def wait_quiet(max_busy=0.02, settle=2, timeout=900):
-    """Block until SETTLE consecutive cpu_busy() windows are <= MAX_BUSY, retrying
-    every 10s. Returns 0 if no window was busy, else the seconds spent; past
-    TIMEOUT it warns and proceeds."""
+def wait_quiet(max_busy=0.08, settle=2, timeout=900):
+    """Block until SETTLE consecutive cpu_busy() windows are <= MAX_BUSY of one CPU,
+    retrying every 10s. Returns 0 if no window was busy, else the seconds spent;
+    past TIMEOUT it warns and proceeds."""
     t0, ok, stalled = time.time(), 0, False
     while ok < settle:
-        busy = cpu_busy()
+        busy = cpu_busy() * NPROC
         if busy <= max_busy:
             ok += 1
             continue
         ok, stalled = 0, True
         if time.time() - t0 > timeout:
-            print(f"WARN machine still {busy:.0%} busy after {timeout}s, running anyway", flush=True)
+            print(f"WARN still {busy:.0%} of one CPU busy after {timeout}s, running anyway", flush=True)
             break
-        print(f"WAIT machine {busy:.1%} busy (want <= {max_busy:.0%}), waiting...", flush=True)
+        print(f"WAIT {busy:.0%} of one CPU busy (want <= {max_busy:.0%}), waiting...", flush=True)
         time.sleep(10)
     return round(time.time() - t0) if stalled else 0
 
@@ -173,12 +173,16 @@ def load_data():
 
 def save_data(data):
     data_path().parent.mkdir(parents=True, exist_ok=True)
-    data_path().write_text(json.dumps(data, indent=2))
+    tmp = data_path().with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(data, indent=2))
+    os.replace(tmp, data_path())  # never leave a truncated results.json
 
 # --- commands ---
 
 def cmd_run(only=None):
     only = only or [n for n in BENCHMARKS if n != "fio"]  # fio only runs when asked explicitly
+    if unknown := [n for n in only if n not in BENCHMARKS]:
+        sys.exit(f"unknown benchmark(s): {', '.join(unknown)} (have: {', '.join(BENCHMARKS)})")
     waited = wait_quiet()
     result = {"sysinfo": sysinfo(), "benchmarks": {}, "skipped": {}}
     if waited:
@@ -188,7 +192,7 @@ def cmd_run(only=None):
             continue
         if not shutil.which(b["needs"]):
             result["skipped"][name] = f"'{b['needs']}' not installed"
-            print(f"SKIP {name}: {b['needs']} not installed")
+            print(f"SKIP {name}: {b['needs']} not installed", flush=True)
             continue
         t0 = time.time()
         try:
@@ -209,10 +213,16 @@ def cmd_run(only=None):
                 result.setdefault("temps_c", {})[name] = temps
             if freqs:
                 result.setdefault("freqs_mhz", {})[name] = freqs
-            print(f"     done in {time.time()-t0:.0f}s")
+            print(f"     done in {time.time()-t0:.0f}s", flush=True)
+        except KeyboardInterrupt:
+            result["skipped"][name] = "interrupted"
+            print(f"\nINTR {name}: interrupted, saving what finished", flush=True)
+            break
         except Exception as e:
             result["skipped"][name] = str(e)
-            print(f"FAIL {name}: {e}")
+            print(f"FAIL {name}: {e}", flush=True)
+    if not result["benchmarks"]:
+        sys.exit("nothing ran, not saving")
     data = load_data()
     nums = [int(m.group(1)) for k in data if (m := re.search(r"_n(\d+)$", k))]
     run_name = f"{result['sysinfo']['kernel']}_n{max(nums, default=0) + 1}"
