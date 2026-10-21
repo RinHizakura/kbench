@@ -5399,6 +5399,12 @@
           1800
         ]
       ]
+    },
+    "notes": {
+      "7.3.0-rc5-g26f0d7eb-100638f0_n5": {
+        "pagefault.bogo_ops_s": "CONFIG_TRANSPARENT_HUGEPAGE=n (forced off by PREEMPT_RT, 554b0f3ca6f4)",
+        "fork.bogo_ops_s": "CONFIG_TRANSPARENT_HUGEPAGE=n (forced off by PREEMPT_RT, 554b0f3ca6f4)"
+      }
     }
   }
 }
