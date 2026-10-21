@@ -55,6 +55,10 @@
 // flag as regression/improved if past this % AND Mann-Whitney says the samples differ;
 // the rank test is what keeps bimodal tails out, so 3% is safe (checked on rpi4 n1-n5)
 const THRESHOLD = 3;
+// syscall and perf-pipe move 3-5% from text layout alone between builds (rpi4 n4->n5,
+// and the RT build n6 shifted syscall by 2 LSB); in-run reps can't see that, so
+// these two need a wider gate.
+const THRESHOLDS = { "perf-pipe": 5, "syscall": 5 };
 const q = new URLSearchParams(location.search);  // ?platform=<dir>&cur=<run>&base=<run> deep-links a comparison; &view=overview for all runs, &series=rt|std to keep RT and non-RT apart
 const $ = id => document.getElementById(id);
 const opts = { cache: "no-cache" };  // Pages sends max-age=600; revalidate so fresh runs show up immediately
@@ -155,7 +159,7 @@ const arrow = better => `<span class="sys" title="${better} is better">${better 
 // verdict for metric m against baseline bm: delta %, confidence the delta is real, status.
 function judge(m, bm, bench) {
   const d = (m.value - bm.value) / bm.value * 100;
-  const thr = THRESHOLD;
+  const thr = THRESHOLDS[bench] ?? THRESHOLD;
   // confidence the delta is real: Mann-Whitney rank test on the raw samples.
   // Latency metrics may be bimodal. The median flips modes on a single rep, and a
   // mean/std z-test on that flip reports false 99% confidence. Ranks don't care
