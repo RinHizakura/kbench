@@ -1,14 +1,10 @@
 #!/bin/sh -e
-# Install kbench dependencies: fio/sysbench (apt), schbench and rtla (built from source).
 
+# Install kbench dependencies
 sudo apt-get update
 sudo apt-get install -y fio sysbench iperf3 stress-ng build-essential git \
     pkg-config libtracefs-dev libtraceevent-dev
-# perf: linux-perf is the kernel-version-independent package (Ubuntu 24.04+);
-# linux-tools-$(uname -r) does not exist for self-built kernels.
-sudo apt-get install -y linux-perf \
-    || sudo apt-get install -y linux-tools-common "linux-tools-$(uname -r)" \
-    || echo "no perf for this kernel; perf benchmarks will be skipped"
+sudo apt-get install -y linux-perf
 
 if command -v schbench >/dev/null; then
     echo "schbench already installed"
