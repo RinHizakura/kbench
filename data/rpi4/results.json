@@ -5402,6 +5402,21 @@
     },
     "notes": {
       "7.3.0-rc5-g26f0d7eb-100638f0_n5": {
+        "ipc.total_s": "PREEMPT_RT tradeoff: spinlock -> rt_mutex, full preemption",
+        "net.tcp.bw_gbps": "PREEMPT_RT: softirq runs in threads (ksoftirqd/backlog), not on irq exit",
+        "net.udp-64b.pps": "PREEMPT_RT: softirq runs in threads (ksoftirqd/backlog), not on irq exit",
+        "net.udp-64b-multi.pps": "PREEMPT_RT: softirq runs in threads (ksoftirqd/backlog), not on irq exit",
+        "schbench-heavy.wake_p50.0_us": "PREEMPT_RT tradeoff: spinlock -> rt_mutex, full preemption",
+        "schbench-heavy.wake_p99.0_us": "PREEMPT_RT tradeoff: spinlock -> rt_mutex, full preemption",
+        "schbench-heavy.req_p50.0_us": "PREEMPT_RT tradeoff: spinlock -> rt_mutex, full preemption",
+        "schbench-heavy.req_p99.0_us": "PREEMPT_RT tradeoff: spinlock -> rt_mutex, full preemption",
+        "schbench-heavy.req_p99.9_us": "PREEMPT_RT tradeoff: spinlock -> rt_mutex, full preemption",
+        "schbench-heavy.avg_rps": "PREEMPT_RT tradeoff: spinlock -> rt_mutex, full preemption",
+        "schbench-light.wake_p50.0_us": "PREEMPT_RT tradeoff: spinlock -> rt_mutex, full preemption",
+        "schbench-light.req_p50.0_us": "PREEMPT_RT tradeoff: spinlock -> rt_mutex, full preemption",
+        "schbench-light.req_p99.0_us": "PREEMPT_RT tradeoff: spinlock -> rt_mutex, full preemption",
+        "schbench-light.req_p99.9_us": "PREEMPT_RT tradeoff: spinlock -> rt_mutex, full preemption",
+        "schbench-light.avg_rps": "PREEMPT_RT tradeoff: spinlock -> rt_mutex, full preemption",
         "pagefault.bogo_ops_s": "CONFIG_TRANSPARENT_HUGEPAGE=n (forced off by PREEMPT_RT, 554b0f3ca6f4)",
         "fork.bogo_ops_s": "CONFIG_TRANSPARENT_HUGEPAGE=n (forced off by PREEMPT_RT, 554b0f3ca6f4)"
       }
