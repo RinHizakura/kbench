@@ -4,8 +4,11 @@
 sudo apt-get update
 sudo apt-get install -y fio sysbench iperf3 stress-ng build-essential git \
     pkg-config libtracefs-dev libtraceevent-dev
-sudo apt-get install -y linux-tools-common "linux-tools-$(uname -r)" \
-    || echo "no linux-tools for this kernel; perf bench will be skipped"
+# perf: linux-perf is the kernel-version-independent package (Ubuntu 24.04+);
+# linux-tools-$(uname -r) does not exist for self-built kernels.
+sudo apt-get install -y linux-perf \
+    || sudo apt-get install -y linux-tools-common "linux-tools-$(uname -r)" \
+    || echo "no perf for this kernel; perf benchmarks will be skipped"
 
 if command -v schbench >/dev/null; then
     echo "schbench already installed"
