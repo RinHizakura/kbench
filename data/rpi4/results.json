@@ -5406,19 +5406,1027 @@
         "net.tcp.bw_gbps": "PREEMPT_RT: softirq runs in threads (ksoftirqd/backlog), not on irq exit",
         "net.udp-64b.pps": "PREEMPT_RT: softirq runs in threads (ksoftirqd/backlog), not on irq exit",
         "net.udp-64b-multi.pps": "PREEMPT_RT: softirq runs in threads (ksoftirqd/backlog), not on irq exit",
-        "schbench-heavy.wake_p50.0_us": "PREEMPT_RT tradeoff: spinlock -> rt_mutex, full preemption",
-        "schbench-heavy.wake_p99.0_us": "PREEMPT_RT tradeoff: spinlock -> rt_mutex, full preemption",
-        "schbench-heavy.req_p50.0_us": "PREEMPT_RT tradeoff: spinlock -> rt_mutex, full preemption",
-        "schbench-heavy.req_p99.0_us": "PREEMPT_RT tradeoff: spinlock -> rt_mutex, full preemption",
-        "schbench-heavy.req_p99.9_us": "PREEMPT_RT tradeoff: spinlock -> rt_mutex, full preemption",
-        "schbench-heavy.avg_rps": "PREEMPT_RT tradeoff: spinlock -> rt_mutex, full preemption",
-        "schbench-light.wake_p50.0_us": "PREEMPT_RT tradeoff: spinlock -> rt_mutex, full preemption",
-        "schbench-light.req_p50.0_us": "PREEMPT_RT tradeoff: spinlock -> rt_mutex, full preemption",
-        "schbench-light.req_p99.0_us": "PREEMPT_RT tradeoff: spinlock -> rt_mutex, full preemption",
-        "schbench-light.req_p99.9_us": "PREEMPT_RT tradeoff: spinlock -> rt_mutex, full preemption",
-        "schbench-light.avg_rps": "PREEMPT_RT tradeoff: spinlock -> rt_mutex, full preemption",
+        "schbench-heavy.wake_p50.0_us": "THP off, not RT: n7 (LAZY rc7, THP off) reproduces these numbers exactly (heavy req_p99 43968, rps ~198). THP depends on !PREEMPT_RT, so the RT build dropped it",
+        "schbench-heavy.wake_p99.0_us": "THP off, not RT: n7 (LAZY rc7, THP off) reproduces these numbers exactly (heavy req_p99 43968, rps ~198). THP depends on !PREEMPT_RT, so the RT build dropped it",
+        "schbench-heavy.req_p50.0_us": "THP off, not RT: n7 (LAZY rc7, THP off) reproduces these numbers exactly (heavy req_p99 43968, rps ~198). THP depends on !PREEMPT_RT, so the RT build dropped it",
+        "schbench-heavy.req_p99.0_us": "THP off, not RT: n7 (LAZY rc7, THP off) reproduces these numbers exactly (heavy req_p99 43968, rps ~198). THP depends on !PREEMPT_RT, so the RT build dropped it",
+        "schbench-heavy.req_p99.9_us": "THP off, not RT: n7 (LAZY rc7, THP off) reproduces these numbers exactly (heavy req_p99 43968, rps ~198). THP depends on !PREEMPT_RT, so the RT build dropped it",
+        "schbench-heavy.avg_rps": "THP off, not RT: n7 (LAZY rc7, THP off) reproduces these numbers exactly (heavy req_p99 43968, rps ~198). THP depends on !PREEMPT_RT, so the RT build dropped it",
+        "schbench-light.wake_p50.0_us": "THP off, not RT: n7 (LAZY rc7, THP off) reproduces these numbers exactly (heavy req_p99 43968, rps ~198). THP depends on !PREEMPT_RT, so the RT build dropped it",
+        "schbench-light.req_p50.0_us": "THP off, not RT: n7 (LAZY rc7, THP off) reproduces these numbers exactly (heavy req_p99 43968, rps ~198). THP depends on !PREEMPT_RT, so the RT build dropped it",
+        "schbench-light.req_p99.0_us": "THP off, not RT: n7 (LAZY rc7, THP off) reproduces these numbers exactly (heavy req_p99 43968, rps ~198). THP depends on !PREEMPT_RT, so the RT build dropped it",
+        "schbench-light.req_p99.9_us": "THP off, not RT: n7 (LAZY rc7, THP off) reproduces these numbers exactly (heavy req_p99 43968, rps ~198). THP depends on !PREEMPT_RT, so the RT build dropped it",
+        "schbench-light.avg_rps": "THP off, not RT: n7 (LAZY rc7, THP off) reproduces these numbers exactly (heavy req_p99 43968, rps ~198). THP depends on !PREEMPT_RT, so the RT build dropped it",
         "pagefault.bogo_ops_s": "CONFIG_TRANSPARENT_HUGEPAGE=n (forced off by PREEMPT_RT, 554b0f3ca6f4)",
         "fork.bogo_ops_s": "CONFIG_TRANSPARENT_HUGEPAGE=n (forced off by PREEMPT_RT, 554b0f3ca6f4)"
+      }
+    }
+  },
+  "7.3.0-rc7-gb998f5b4-24a19b95_n7": {
+    "sysinfo": {
+      "kernel": "7.3.0-rc7-gb998f5b4-24a19b95",
+      "date": "2026-10-22T22:51:00",
+      "cmdline": "dma.dmachans=0x37f5 bcm2709.boardrev=0xd03115 bcm2709.serial=0x9d714099 bcm2709.uart_clock=48000000 bcm2709.disk_led_gpio=42 bcm2709.disk_led_active_low=0 smsc95xx.macaddr=D8:3A:DD:0A:CC:5F vc_mem.mem_base=0x3ec00000 vc_mem.mem_size=0x40000000  multipath=off dwc_otg.lpm_enable=0 console=tty1 root=LABEL=writable rootfstype=ext4 panic=10 rootwait fixrtc console=ttyS1,115200",
+      "governor": "schedutil",
+      "config": "b998f5b4",
+      "quiet_wait_s": 38
+    },
+    "benchmarks": {
+      "ipc": {
+        "total_s": {
+          "value": 6.84,
+          "std": 0.04,
+          "samples": [
+            6.76,
+            6.85,
+            6.85,
+            6.84,
+            6.84
+          ],
+          "better": "lower"
+        }
+      },
+      "memory-256k": {
+        "read.bw_mibps": {
+          "value": 11228.48,
+          "std": 16.96,
+          "samples": [
+            11223.17,
+            11218.37,
+            11253.48,
+            11253.74,
+            11228.48
+          ],
+          "better": "higher"
+        },
+        "write.bw_mibps": {
+          "value": 7934.95,
+          "std": 123.7,
+          "samples": [
+            7667.33,
+            7953.9,
+            7934.95,
+            7901.57,
+            7964.42
+          ],
+          "better": "higher"
+        }
+      },
+      "memory-64m": {
+        "read.bw_mibps": {
+          "value": 3998.23,
+          "std": 20.77,
+          "samples": [
+            3995.37,
+            3999.78,
+            3998.23,
+            3952.81,
+            4002.25
+          ],
+          "better": "higher"
+        },
+        "write.bw_mibps": {
+          "value": 3032.68,
+          "std": 2.02,
+          "samples": [
+            3034.99,
+            3032.68,
+            3032.94,
+            3032.46,
+            3029.35
+          ],
+          "better": "higher"
+        }
+      },
+      "net": {
+        "tcp.bw_gbps": {
+          "value": 20.09,
+          "std": 5.41,
+          "samples": [
+            19.6,
+            8.51,
+            21.57,
+            20.74,
+            20.09
+          ],
+          "better": "higher"
+        },
+        "tcp-zc.bw_gbps": {
+          "value": 31.63,
+          "std": 0.52,
+          "samples": [
+            32.35,
+            31.63,
+            31.61,
+            32.67,
+            31.52
+          ],
+          "better": "higher"
+        },
+        "udp-64b.pps": {
+          "value": 129905.96,
+          "std": 323.21,
+          "samples": [
+            130188.56,
+            129691.17,
+            130176.69,
+            129434.69,
+            129905.96
+          ],
+          "better": "higher"
+        },
+        "udp-64b-multi.pps": {
+          "value": 372057.58,
+          "std": 3905.36,
+          "samples": [
+            369128.16,
+            371505.27,
+            379205.44,
+            375316.41,
+            372057.58
+          ],
+          "better": "higher"
+        }
+      },
+      "schbench-heavy": {
+        "wake_p50.0_us": {
+          "value": 4,
+          "std": 0.5,
+          "samples": [
+            4,
+            4,
+            5,
+            4,
+            5,
+            4,
+            5,
+            4,
+            4
+          ],
+          "better": "lower"
+        },
+        "wake_p99.0_us": {
+          "value": 2676,
+          "std": 129.0,
+          "samples": [
+            2492,
+            2660,
+            2692,
+            2692,
+            2676,
+            2732,
+            2492,
+            2492,
+            2868
+          ],
+          "better": "lower"
+        },
+        "wake_p99.9_us": {
+          "value": 3244,
+          "std": 666.09,
+          "samples": [
+            3148,
+            3244,
+            3004,
+            3396,
+            3244,
+            3236,
+            3100,
+            5000,
+            4248
+          ],
+          "better": "lower"
+        },
+        "req_p50.0_us": {
+          "value": 40768,
+          "std": 1483.09,
+          "samples": [
+            40768,
+            41792,
+            40000,
+            38720,
+            38848,
+            40768,
+            40000,
+            43200,
+            42048
+          ],
+          "better": "lower"
+        },
+        "req_p99.0_us": {
+          "value": 43968,
+          "std": 0.0,
+          "samples": [
+            43968,
+            43968,
+            43968,
+            43968,
+            43968,
+            43968,
+            43968,
+            43968,
+            43968
+          ],
+          "better": "lower"
+        },
+        "req_p99.9_us": {
+          "value": 60736,
+          "std": 15129.4,
+          "samples": [
+            55616,
+            78720,
+            46272,
+            84864,
+            44224,
+            60736,
+            44224,
+            70784,
+            67712
+          ],
+          "better": "lower"
+        },
+        "avg_rps": {
+          "value": 197.64,
+          "std": 0.9,
+          "samples": [
+            198.65,
+            198.84,
+            197.19,
+            197.36,
+            199.07,
+            198.56,
+            197.07,
+            196.59,
+            197.64
+          ],
+          "better": "higher"
+        }
+      },
+      "schbench-light": {
+        "wake_p50.0_us": {
+          "value": 6,
+          "std": 0.0,
+          "samples": [
+            6,
+            6,
+            6,
+            6,
+            6
+          ],
+          "better": "lower"
+        },
+        "wake_p99.0_us": {
+          "value": 9,
+          "std": 1.52,
+          "samples": [
+            9,
+            9,
+            8,
+            9,
+            12
+          ],
+          "better": "lower"
+        },
+        "wake_p99.9_us": {
+          "value": 12,
+          "std": 3.49,
+          "samples": [
+            13,
+            12,
+            12,
+            20,
+            12
+          ],
+          "better": "lower"
+        },
+        "req_p50.0_us": {
+          "value": 10032,
+          "std": 14.31,
+          "samples": [
+            10032,
+            10032,
+            10064,
+            10032,
+            10032
+          ],
+          "better": "lower"
+        },
+        "req_p99.0_us": {
+          "value": 10064,
+          "std": 14.31,
+          "samples": [
+            10064,
+            10064,
+            10064,
+            10096,
+            10064
+          ],
+          "better": "lower"
+        },
+        "req_p99.9_us": {
+          "value": 10096,
+          "std": 28.62,
+          "samples": [
+            10096,
+            10096,
+            10096,
+            10160,
+            10096
+          ],
+          "better": "lower"
+        },
+        "avg_rps": {
+          "value": 198.86,
+          "std": 0.05,
+          "samples": [
+            198.88,
+            198.85,
+            198.75,
+            198.86,
+            198.88
+          ],
+          "better": "higher"
+        }
+      },
+      "pagefault": {
+        "bogo_ops_s": {
+          "value": 21573.69,
+          "std": 140.99,
+          "samples": [
+            21442.92,
+            21573.69,
+            21617.76,
+            21440.31,
+            21780.37
+          ],
+          "better": "higher"
+        }
+      },
+      "fork": {
+        "bogo_ops_s": {
+          "value": 1807.99,
+          "std": 22.07,
+          "samples": [
+            1807.99,
+            1820.21,
+            1803.39,
+            1813.96,
+            1764.1
+          ],
+          "better": "higher"
+        }
+      },
+      "syscall": {
+        "usecs_op": {
+          "value": 0.46,
+          "std": 0.0,
+          "samples": [
+            0.46,
+            0.46,
+            0.45,
+            0.46,
+            0.45
+          ],
+          "better": "lower"
+        }
+      },
+      "perf-pipe": {
+        "d0.usecs_op": {
+          "value": 6.36,
+          "std": 0.04,
+          "samples": [
+            6.42,
+            6.35,
+            6.36,
+            6.38,
+            6.32
+          ],
+          "better": "lower"
+        },
+        "d16.usecs_op": {
+          "value": 7.2,
+          "std": 0.06,
+          "samples": [
+            7.27,
+            7.27,
+            7.14,
+            7.2,
+            7.16
+          ],
+          "better": "lower"
+        }
+      },
+      "timerlat": {
+        "irq.max_us": {
+          "value": 58.0,
+          "std": 1.52,
+          "samples": [
+            59.0,
+            58.0,
+            59.0,
+            56.0,
+            56.0
+          ],
+          "better": "lower"
+        },
+        "irq.avg_us": {
+          "value": 2.0,
+          "std": 0.0,
+          "samples": [
+            2.0,
+            2.0,
+            2.0,
+            2.0,
+            2.0
+          ],
+          "better": "lower"
+        },
+        "thread.max_us": {
+          "value": 124.0,
+          "std": 36.28,
+          "samples": [
+            172.0,
+            151.0,
+            90.0,
+            124.0,
+            91.0
+          ],
+          "better": "lower"
+        },
+        "thread.avg_us": {
+          "value": 12.0,
+          "std": 0.51,
+          "samples": [
+            12.0,
+            11.75,
+            12.75,
+            12.75,
+            11.75
+          ],
+          "better": "lower"
+        },
+        "user.max_us": {
+          "value": 177.0,
+          "std": 31.0,
+          "samples": [
+            184.0,
+            164.0,
+            112.0,
+            188.0,
+            177.0
+          ],
+          "better": "lower"
+        },
+        "user.avg_us": {
+          "value": 19.75,
+          "std": 0.62,
+          "samples": [
+            19.75,
+            18.75,
+            19.75,
+            19.75,
+            18.5
+          ],
+          "better": "lower"
+        }
+      }
+    },
+    "skipped": {},
+    "temps_c": {
+      "ipc": [
+        [
+          30.2,
+          30.2
+        ],
+        [
+          37.5,
+          37.5
+        ],
+        [
+          39.9,
+          39.9
+        ],
+        [
+          40.9,
+          40.9
+        ],
+        [
+          41.4,
+          41.4
+        ]
+      ],
+      "memory-256k": [
+        [
+          41.9,
+          41.9
+        ],
+        [
+          39.4,
+          39.4
+        ],
+        [
+          38.9,
+          38.9
+        ],
+        [
+          38.9,
+          38.9
+        ],
+        [
+          40.9,
+          40.9
+        ]
+      ],
+      "memory-64m": [
+        [
+          39.4,
+          39.4
+        ],
+        [
+          38.9,
+          38.9
+        ],
+        [
+          38.9,
+          38.9
+        ],
+        [
+          38.9,
+          38.9
+        ],
+        [
+          37.0,
+          37.5
+        ]
+      ],
+      "net": [
+        [
+          37.5,
+          43.8
+        ],
+        [
+          44.8,
+          44.8
+        ],
+        [
+          45.3,
+          45.3
+        ],
+        [
+          44.8,
+          45.3
+        ],
+        [
+          44.8,
+          45.8
+        ]
+      ],
+      "schbench-heavy": [
+        [
+          44.3,
+          57.0
+        ],
+        [
+          57.5,
+          58.4
+        ],
+        [
+          58.4,
+          59.4
+        ],
+        [
+          58.4,
+          59.4
+        ],
+        [
+          59.4,
+          59.9
+        ],
+        [
+          58.9,
+          59.9
+        ],
+        [
+          59.9,
+          60.4
+        ],
+        [
+          59.9,
+          60.9
+        ],
+        [
+          59.9,
+          61.3
+        ]
+      ],
+      "schbench-light": [
+        [
+          61.3,
+          61.3
+        ],
+        [
+          49.2,
+          49.7
+        ],
+        [
+          48.2,
+          49.7
+        ],
+        [
+          49.2,
+          49.7
+        ],
+        [
+          49.2,
+          49.7
+        ]
+      ],
+      "pagefault": [
+        [
+          48.7,
+          49.7
+        ],
+        [
+          49.2,
+          49.2
+        ],
+        [
+          50.1,
+          50.6
+        ],
+        [
+          50.1,
+          51.1
+        ],
+        [
+          50.1,
+          50.1
+        ]
+      ],
+      "fork": [
+        [
+          49.7,
+          49.7
+        ],
+        [
+          48.7,
+          49.2
+        ],
+        [
+          49.2,
+          49.2
+        ],
+        [
+          47.2,
+          47.7
+        ],
+        [
+          48.2,
+          48.2
+        ]
+      ],
+      "syscall": [
+        [
+          47.7,
+          47.7
+        ],
+        [
+          44.8,
+          44.8
+        ],
+        [
+          43.8,
+          43.8
+        ],
+        [
+          43.8,
+          43.8
+        ],
+        [
+          41.9,
+          41.9
+        ]
+      ],
+      "perf-pipe": [
+        [
+          36.0,
+          40.9
+        ],
+        [
+          39.4,
+          40.4
+        ],
+        [
+          40.4,
+          41.4
+        ],
+        [
+          39.4,
+          39.4
+        ],
+        [
+          41.4,
+          41.4
+        ]
+      ],
+      "timerlat": [
+        [
+          40.4,
+          40.4
+        ],
+        [
+          37.0,
+          37.5
+        ],
+        [
+          37.5,
+          37.5
+        ],
+        [
+          37.5,
+          37.5
+        ],
+        [
+          37.5,
+          37.5
+        ]
+      ]
+    },
+    "freqs_mhz": {
+      "ipc": [
+        [
+          1300,
+          1300
+        ],
+        [
+          1800,
+          1800
+        ],
+        [
+          1800,
+          1800
+        ],
+        [
+          1800,
+          1800
+        ],
+        [
+          1800,
+          1800
+        ]
+      ],
+      "memory-256k": [
+        [
+          1800,
+          1800
+        ],
+        [
+          1700,
+          1700
+        ],
+        [
+          1700,
+          1700
+        ],
+        [
+          1700,
+          1700
+        ],
+        [
+          1700,
+          1700
+        ]
+      ],
+      "memory-64m": [
+        [
+          1600,
+          1800
+        ],
+        [
+          1600,
+          1800
+        ],
+        [
+          1800,
+          1800
+        ],
+        [
+          1600,
+          1800
+        ],
+        [
+          1700,
+          1800
+        ]
+      ],
+      "net": [
+        [
+          1300,
+          1800
+        ],
+        [
+          1600,
+          1800
+        ],
+        [
+          1500,
+          1800
+        ],
+        [
+          1800,
+          1800
+        ],
+        [
+          1700,
+          1800
+        ]
+      ],
+      "schbench-heavy": [
+        [
+          1800,
+          1800
+        ],
+        [
+          1800,
+          1800
+        ],
+        [
+          1800,
+          1800
+        ],
+        [
+          1800,
+          1800
+        ],
+        [
+          1800,
+          1800
+        ],
+        [
+          1800,
+          1800
+        ],
+        [
+          1800,
+          1800
+        ],
+        [
+          1800,
+          1800
+        ],
+        [
+          1800,
+          1800
+        ]
+      ],
+      "schbench-light": [
+        [
+          1800,
+          1800
+        ],
+        [
+          1800,
+          1800
+        ],
+        [
+          1800,
+          1800
+        ],
+        [
+          1800,
+          1800
+        ],
+        [
+          1800,
+          1800
+        ]
+      ],
+      "pagefault": [
+        [
+          1600,
+          1800
+        ],
+        [
+          1800,
+          1800
+        ],
+        [
+          1800,
+          1800
+        ],
+        [
+          1800,
+          1800
+        ],
+        [
+          1800,
+          1800
+        ]
+      ],
+      "fork": [
+        [
+          1800,
+          1800
+        ],
+        [
+          1800,
+          1800
+        ],
+        [
+          1800,
+          1800
+        ],
+        [
+          1800,
+          1800
+        ],
+        [
+          1800,
+          1800
+        ]
+      ],
+      "syscall": [
+        [
+          1600,
+          1600
+        ],
+        [
+          1600,
+          1600
+        ],
+        [
+          1800,
+          1800
+        ],
+        [
+          1600,
+          1600
+        ],
+        [
+          1600,
+          1600
+        ]
+      ],
+      "perf-pipe": [
+        [
+          1200,
+          1800
+        ],
+        [
+          1200,
+          1800
+        ],
+        [
+          900,
+          1800
+        ],
+        [
+          1200,
+          1800
+        ],
+        [
+          1200,
+          1800
+        ]
+      ],
+      "timerlat": [
+        [
+          600,
+          900
+        ],
+        [
+          600,
+          1800
+        ],
+        [
+          600,
+          1200
+        ],
+        [
+          600,
+          1800
+        ],
+        [
+          600,
+          1800
+        ]
+      ]
+    },
+    "notes": {
+      "7.3.0-rc5-g26f0d7eb-100638f0_n5": {
+        "schbench-heavy.wake_p50.0_us": "THP off (TRANSPARENT_HUGEPAGE lost via the --rt .config, kept as deploy default since 2026-10-22): no 2MB fault zeroing, no huge-page COW/split, no khugepaged",
+        "schbench-heavy.wake_p99.0_us": "THP off (TRANSPARENT_HUGEPAGE lost via the --rt .config, kept as deploy default since 2026-10-22): no 2MB fault zeroing, no huge-page COW/split, no khugepaged",
+        "schbench-heavy.req_p50.0_us": "THP off (TRANSPARENT_HUGEPAGE lost via the --rt .config, kept as deploy default since 2026-10-22): no 2MB fault zeroing, no huge-page COW/split, no khugepaged",
+        "schbench-heavy.req_p99.0_us": "THP off (TRANSPARENT_HUGEPAGE lost via the --rt .config, kept as deploy default since 2026-10-22): no 2MB fault zeroing, no huge-page COW/split, no khugepaged",
+        "schbench-heavy.req_p99.9_us": "THP off (TRANSPARENT_HUGEPAGE lost via the --rt .config, kept as deploy default since 2026-10-22): no 2MB fault zeroing, no huge-page COW/split, no khugepaged",
+        "schbench-heavy.avg_rps": "THP off (TRANSPARENT_HUGEPAGE lost via the --rt .config, kept as deploy default since 2026-10-22): no 2MB fault zeroing, no huge-page COW/split, no khugepaged",
+        "schbench-light.wake_p99.0_us": "THP off (TRANSPARENT_HUGEPAGE lost via the --rt .config, kept as deploy default since 2026-10-22): no 2MB fault zeroing, no huge-page COW/split, no khugepaged",
+        "schbench-light.wake_p99.9_us": "THP off (TRANSPARENT_HUGEPAGE lost via the --rt .config, kept as deploy default since 2026-10-22): no 2MB fault zeroing, no huge-page COW/split, no khugepaged",
+        "schbench-light.req_p50.0_us": "THP off (TRANSPARENT_HUGEPAGE lost via the --rt .config, kept as deploy default since 2026-10-22): no 2MB fault zeroing, no huge-page COW/split, no khugepaged",
+        "schbench-light.req_p99.0_us": "THP off (TRANSPARENT_HUGEPAGE lost via the --rt .config, kept as deploy default since 2026-10-22): no 2MB fault zeroing, no huge-page COW/split, no khugepaged",
+        "schbench-light.req_p99.9_us": "THP off (TRANSPARENT_HUGEPAGE lost via the --rt .config, kept as deploy default since 2026-10-22): no 2MB fault zeroing, no huge-page COW/split, no khugepaged",
+        "schbench-light.avg_rps": "THP off (TRANSPARENT_HUGEPAGE lost via the --rt .config, kept as deploy default since 2026-10-22): no 2MB fault zeroing, no huge-page COW/split, no khugepaged",
+        "fork.bogo_ops_s": "THP off (TRANSPARENT_HUGEPAGE lost via the --rt .config, kept as deploy default since 2026-10-22): no 2MB fault zeroing, no huge-page COW/split, no khugepaged"
       }
     }
   }
