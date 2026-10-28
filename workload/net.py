@@ -7,10 +7,13 @@ def bench_net():
     bw = lambda e: ("bw_gbps", e["sum_received"]["bits_per_second"] / 1e9)
     pps = lambda e: ("pps", e["sum"]["packets"] / e["sum"]["seconds"])
     udp = ["-u", "-b", "0", "-l", "64"]
+    # single-stream TCP: pin client to cpu 0 and server to the last cpu (-A n,m sets both
+    # from the client side), otherwise the pair migrates and Gbps swings ±25% rep to rep
+    pin = ["-A", f"0,{NPROC - 1}"] if NPROC > 1 else []
     out = {}
     for name, extra, metric in [
-        ("tcp",           [],                  bw),
-        ("tcp-zc",        ["-Z"],              bw),   # zero-copy (sendfile) send path
+        ("tcp",           pin,                 bw),
+        ("tcp-zc",        pin + ["-Z"],        bw),   # zero-copy (sendfile) send path
         ("udp-64b",       udp,                 pps),
         ("udp-64b-multi", udp + ["-P", NPROC], pps),
     ]:
