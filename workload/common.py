@@ -1,7 +1,7 @@
 """Shared helpers for workload/*.py.
 
 Each workload file exports BENCHMARKS = {name: {"needs": <binary>, "fn": callable,
-["repeat": n]}}; fn() returns {metric: (value, "higher"|"lower")}. kbench.py loads
+["repeat": n]}}; fn() returns {metric: (value, "higher"|"lower")}. slowpoke.py loads
 every file here; running a file directly executes its benchmarks once and prints
 the metrics without touching data/."""
 import os, re, subprocess, sys

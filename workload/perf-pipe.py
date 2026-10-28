@@ -17,12 +17,12 @@ def _in_cgroup(leaf, cpu=None):
     return pre
 
 def _nested_cgroup(depth):
-    """/sys/fs/cgroup/kbench-d<depth>/l2/.../l<depth> with the cpu controller
+    """/sys/fs/cgroup/slowpoke-d<depth>/l2/.../l<depth> with the cpu controller
     enabled at every level (one cfs_rq per level). Returns the leaf (root for 0)."""
     path = CG_ROOT
     for i in range(depth):
         (path / "cgroup.subtree_control").write_text("+cpu")  # idempotent
-        path = path / (f"kbench-d{depth}" if i == 0 else f"l{i + 1}")
+        path = path / (f"slowpoke-d{depth}" if i == 0 else f"l{i + 1}")
         path.mkdir(exist_ok=True)
     return path
 

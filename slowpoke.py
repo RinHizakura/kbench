@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""kbench — kernel regression benchmark runner.
+"""slowpoke — kernel regression benchmark runner.
 
-    ./kbench.py run [bench...] [-o PLATFORM]   # append a run to data/PLATFORM/results.json (default: all but fio)
-    ./kbench.py list [-o PLATFORM]             # list saved runs
-    ./kbench.py rm <run> [-o PLATFORM]         # delete one run
+    ./slowpoke.py run [bench...] [-o PLATFORM]   # append a run to data/PLATFORM/results.json (default: all but fio)
+    ./slowpoke.py list [-o PLATFORM]             # list saved runs
+    ./slowpoke.py rm <run> [-o PLATFORM]         # delete one run
 """
 import gzip, hashlib, importlib.util, json, os, re, shutil, statistics, subprocess, sys, threading, time
 from datetime import datetime
@@ -254,7 +254,7 @@ if __name__ == "__main__":
     elif args[0] == "rm" and len(args) == 2:
         data = load_data()
         if args[1] not in data:
-            sys.exit(f"no run '{args[1]}' in {data_path().name} (see: kbench.py list)")
+            sys.exit(f"no run '{args[1]}' in {data_path().name} (see: slowpoke.py list)")
         del data[args[1]]
         save_data(data)
         print(f"removed {args[1]} from {data_path().name}")

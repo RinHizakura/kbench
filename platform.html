@@ -1,7 +1,7 @@
 <!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>kbench platform info</title>
+<title>slowpoke platform info</title>
 <style>
   body { font: 15px/1.5 system-ui, sans-serif; max-width: 60rem; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
   h1 { font-size: 1.4rem; }
@@ -31,7 +31,7 @@ $("plat").onchange = () => location.search = "?platform=" + encodeURIComponent($
 $("back").href = "index.html?platform=" + encodeURIComponent(plat);
 const r = await fetch(`data/${plat}/hw.json`, opts);
 if (!r.ok) {
-  $("out").textContent = `no hw info for ${plat} yet — run kbench.py once to generate it`;
+  $("out").textContent = `no hw info for ${plat} yet — run slowpoke.py once to generate it`;
 } else {
   const hw = await r.json();
   const rows = Object.entries(hw).flatMap(([k, v]) =>

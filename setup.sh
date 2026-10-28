@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-# Install kbench dependencies
+# Install slowpoke dependencies
 sudo apt-get update
 sudo apt-get install -y fio sysbench iperf3 stress-ng build-essential git \
     pkg-config libtracefs-dev libtraceevent-dev

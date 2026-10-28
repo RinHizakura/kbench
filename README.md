@@ -1,16 +1,16 @@
-# kbench
+# slowpoke
 
 Run a set of kernel benchmarks and compare results across kernel versions and platforms.
 
-Latest report: <https://rinhizakura.github.io/kbench/>
+Latest report: <https://rinhizakura.github.io/slowpoke/>
 
 ## Usage
 
 ```sh
-./kbench.py run                  # all benchmarks -> data/runs/results.json
-./kbench.py run --output rpi4    # per-platform data dir -> data/rpi4/ (results.json, hw.json, configs/)
-./kbench.py list --output rpi4   # list saved runs
-./kbench.py rm <run> --output rpi4
+./slowpoke.py run                  # all benchmarks -> data/runs/results.json
+./slowpoke.py run --output rpi4    # per-platform data dir -> data/rpi4/ (results.json, hw.json, configs/)
+./slowpoke.py list --output rpi4   # list saved runs
+./slowpoke.py rm <run> --output rpi4
 python3 -m http.server            # view report locally at http://localhost:8000
 ```
 
