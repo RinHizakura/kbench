@@ -18,6 +18,10 @@ Each benchmark lives in `workload/<name>.py`. Run one directly to execute it onc
 print its metrics without saving anything (e.g. `sudo python3 workload/perf-pipe.py`,
 `python3 workload/schbench.py schbench-light`).
 
+Each run also records `sysinfo` (kernel, cmdline, `/proc/version`, governor, THP mode,
+preempt mode when debugfs is readable, config hash, kernel boot time from `systemd-analyze`) and rewrites
+`hw.json` (board, cpus, memory, caches, the filesystem/device under the repo that fio writes to).
+
 ## Benchmarks
 
 | name       | needs       | measures                                                                 |

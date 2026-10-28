@@ -63,6 +63,9 @@ def hwinfo():
             pass
     if caches:
         info["caches"] = caches
+    r = subprocess.run(["findmnt", "-n", "-o", "SOURCE,FSTYPE", "-T", str(ROOT)], capture_output=True, text=True)
+    if r.stdout.strip():
+        info["storage"] = " ".join(r.stdout.split())  # fio's testfile lives under ROOT
     return info
 
 def kconfig():
@@ -150,17 +153,25 @@ def wait_quiet(max_busy=0.08, settle=2, timeout=900):
 def sysinfo():
     info = {"kernel": os.uname().release, "date": datetime.now().isoformat(timespec="seconds")}
     for name, path in [("cmdline", "/proc/cmdline"),
-                       ("governor", "/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor")]:
+                       ("version", "/proc/version"),  # compiler + build date
+                       ("governor", "/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"),
+                       ("thp", "/sys/kernel/mm/transparent_hugepage/enabled"),  # "always [madvise] never"
+                       ("preempt", "/sys/kernel/debug/sched/preempt")]:  # "none voluntary (full) lazy"; root + PREEMPT_DYNAMIC only, absent on RT
         try:
-            info[name] = Path(path).read_text().strip()
+            v = Path(path).read_text().strip()
         except OSError:
-            pass
+            continue
+        info[name] = m.group(1) if name in ("thp", "preempt") and (m := re.search(r"[\[(](\w+)[\])]", v)) else v
     if cfg := kconfig():
         h = hashlib.sha1(cfg.encode()).hexdigest()[:8]
         d = ROOT / "data" / PREFIX / "configs"
         d.mkdir(parents=True, exist_ok=True)
         (d / f"{h}.config").write_text(cfg)
         info["config"] = h
+    if shutil.which("systemd-analyze"):
+        r = subprocess.run(["systemd-analyze", "time"], capture_output=True, text=True)
+        if m := re.search(r"([\d.]+)s \(kernel\)", r.stdout):  # "Startup finished in 2.3s (kernel) + ..."
+            info["boot_kernel_s"] = float(m.group(1))
     return info
 
 # --- storage: one dir per platform under data/ (results.json, hw.json, configs/) ---
