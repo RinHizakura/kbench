@@ -1,6 +1,9 @@
-"""rtla timerlat: a 1ms periodic timer on every CPU, latency at the IRQ handler, the woken
+"""rtla tracers (need root for tracefs):
+timerlat — a 1ms periodic timer on every CPU, latency at the IRQ handler, the woken
 kernel thread and the return to a user thread; p99/p99.9 over all samples, max over
-CPUs, mean of the per-CPU averages. Needs root (tracefs) and CONFIG_TIMERLAT_TRACER."""
+CPUs, mean of the per-CPU averages (CONFIG_TIMERLAT_TRACER).
+osnoise — a busy loop on every CPU, counting the time stolen by irqs, softirqs, NMIs
+and other threads (CONFIG_OSNOISE_TRACER)."""
 import os, re
 from common import run_bench, main
 
@@ -52,7 +55,21 @@ def bench_timerlat():
         out[f"{kind}.max_us"] = (max(summ["max"][i] for i in idx), "lower")
     return out
 
-BENCHMARKS = {"timerlat": {"needs": "rtla", "fn": bench_timerlat}}
+def bench_osnoise():
+    """noise_us: time stolen from the busy loops, summed over CPUs for the whole run.
+    max_noise_us: worst single 1s period; max_single_us: longest single interruption."""
+    _root()
+    r = run_bench(["rtla", "osnoise", "top", "-q", "-d", f"{DURATION}s"])
+    # per-CPU rows: "<cpu> #<periods> <runtime> <noise> <%avail> <max noise> <max single> HW NMI IRQ Softirq Thread"
+    rows = [l.split() for l in r.stdout.splitlines() if re.match(r"\s*\d+\s+#\d+", l)]
+    if not rows:
+        raise RuntimeError("could not parse rtla osnoise output")
+    return {"noise_us": (sum(float(f[3]) for f in rows), "lower"),
+            "max_noise_us": (max(float(f[5]) for f in rows), "lower"),
+            "max_single_us": (max(float(f[6]) for f in rows), "lower")}
+
+BENCHMARKS = {"timerlat": {"needs": "rtla", "fn": bench_timerlat},
+              "osnoise": {"needs": "rtla", "fn": bench_osnoise}}
 
 if __name__ == "__main__":
     main(BENCHMARKS)

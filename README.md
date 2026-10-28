@@ -36,6 +36,7 @@ The report's RT/non-RT series split uses `sysinfo.rt`.
 | ipc        | perf        | scheduler+IPC throughput (hackbench-style)                               |
 | perf-pipe  | perf       | pinned pipe ping-pong wakeup cost from the root cgroup and 16 cpu-cgroup levels deep (creates cgroups, so run as root) |
 | timerlat   | rtla        | 1ms timer wakeup latency at the irq, kernel thread and user thread: p99/p99.9 over all samples, max + avg over all CPUs (tracefs, so run as root; kernel needs CONFIG_TIMERLAT_TRACER) |
+| osnoise    | rtla        | OS noise stolen from a busy loop on every CPU: total us, worst 1s period, longest single interruption (root; CONFIG_OSNOISE_TRACER) |
 | pagefault  | stress-ng   | page-fault rate                                                          |
 | fork       | stress-ng   | fork/exec rate                                                           |
 
