@@ -67,7 +67,7 @@ $("plat").onchange = () => location.search = "?platform=" + encodeURIComponent($
 $("hwlink").href = "platform.html?platform=" + encodeURIComponent(plat);
 const DATA = await (await fetch(`data/${plat}/results.json`, opts)).json();
 const names = Object.keys(DATA).sort((a, b) => DATA[b].sysinfo.date.localeCompare(DATA[a].sysinfo.date));  // newest first
-const RT = n => /-rt-g[0-9a-f]{8}-/.test(n);  // deploy script tags PREEMPT_RT builds with -rt in localversion
+const RT = n => !!DATA[n].sysinfo.rt;  // set at run time from CONFIG_PREEMPT_RT=y
 const inSeries = r => !$("series").value || ($("series").value === "rt") === RT(r);
 // a deep link naming runs picks "all" unless it says otherwise, so cross-series links keep working
 $("series").value = q.get("series") ?? (q.has("cur") || q.has("base") ? "" : "std");

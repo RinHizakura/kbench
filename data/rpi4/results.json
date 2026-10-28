@@ -4535,7 +4535,8 @@
       "date": "2026-10-20T23:47:32",
       "cmdline": "dma.dmachans=0x37f5 bcm2709.boardrev=0xd03115 bcm2709.serial=0x9d714099 bcm2709.uart_clock=48000000 bcm2709.disk_led_gpio=42 bcm2709.disk_led_active_low=0 smsc95xx.macaddr=D8:3A:DD:0A:CC:5F vc_mem.mem_base=0x3ec00000 vc_mem.mem_size=0x40000000  multipath=off dwc_otg.lpm_enable=0 console=tty1 root=LABEL=writable rootfstype=ext4 panic=10 rootwait fixrtc console=ttyS1,115200",
       "governor": "schedutil",
-      "config": "a59c9265"
+      "config": "a59c9265",
+      "rt": true
     },
     "benchmarks": {
       "ipc": {
@@ -6436,7 +6437,8 @@
       "date": "2026-10-28T00:25:36",
       "cmdline": "dma.dmachans=0x37f5 bcm2709.boardrev=0xd03115 bcm2709.serial=0x9d714099 bcm2709.uart_clock=48000000 bcm2709.disk_led_gpio=42 bcm2709.disk_led_active_low=0 smsc95xx.macaddr=D8:3A:DD:0A:CC:5F vc_mem.mem_base=0x3ec00000 vc_mem.mem_size=0x40000000  multipath=off dwc_otg.lpm_enable=0 console=tty1 root=LABEL=writable rootfstype=ext4 panic=10 rootwait fixrtc console=ttyS1,115200",
       "governor": "schedutil",
-      "config": "f50b8e2d"
+      "config": "f50b8e2d",
+      "rt": true
     },
     "benchmarks": {
       "ipc": {

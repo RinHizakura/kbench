@@ -168,6 +168,8 @@ def sysinfo():
         d.mkdir(parents=True, exist_ok=True)
         (d / f"{h}.config").write_text(cfg)
         info["config"] = h
+        if "CONFIG_PREEMPT_RT=y\n" in cfg:
+            info["rt"] = True  # the report keeps RT and non-RT runs as separate series
     if shutil.which("systemd-analyze"):
         r = subprocess.run(["systemd-analyze", "time"], capture_output=True, text=True)
         if m := re.search(r"([\d.]+)s \(kernel\)", r.stdout):  # "Startup finished in 2.3s (kernel) + ..."
