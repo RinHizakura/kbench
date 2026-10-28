@@ -268,8 +268,12 @@ if __name__ == "__main__":
         data = load_data()
         if args[1] not in data:
             sys.exit(f"no run '{args[1]}' in {data_path().name} (see: slowpoke.py list)")
-        del data[args[1]]
+        run = data.pop(args[1])
         save_data(data)
         print(f"removed {args[1]} from {data_path().name}")
+        h = run["sysinfo"].get("config")
+        if h and not any(r["sysinfo"].get("config") == h for r in data.values()):
+            (data_path().parent / "configs" / f"{h}.config").unlink(missing_ok=True)
+            print(f"removed configs/{h}.config (no other run uses it)")
     else:
         sys.exit(__doc__)
