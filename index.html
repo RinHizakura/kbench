@@ -45,7 +45,7 @@
   <label>compare with <select id="base"></select></label>
   <label>benchmark <select id="bench"></select></label>
   <label>last runs <input id="last" type="number" min="2" step="1" placeholder="all" style="width:4.5em"></label>
-  <label>series <select id="series"><option value="std">non-RT</option><option value="rt">RT</option></select></label>
+  <label>series <select id="series"><option value="std">non-RT</option><option value="rt">RT</option><option value="">— all —</option></select></label>
   <a id="hwlink" href="platform.html">platform info</a>
 </p>
 <div id="sys"></div>
@@ -56,7 +56,7 @@
 // the rank test keeps bimodal tails out; the % gate covers build-to-build text layout
 // noise, which in-run reps can't see. Set to >5%.
 const THRESHOLD = 5;
-const q = new URLSearchParams(location.search);  // ?platform=<dir>&cur=<run>&base=<run> deep-links a comparison; &view=overview for all runs, &series=rt|std to keep RT and non-RT apart
+const q = new URLSearchParams(location.search);  // ?platform=<dir>&cur=<run>&base=<run> deep-links a comparison; &view=overview for all runs, &series=rt|std|"" filters the runs in either view (RT and non-RT kernels are separate series)
 const $ = id => document.getElementById(id);
 const opts = { cache: "no-cache" };  // Pages sends max-age=600; revalidate so fresh runs show up immediately
 const platforms = await (await fetch("data/platforms.json", opts)).json();
@@ -67,17 +67,24 @@ $("plat").onchange = () => location.search = "?platform=" + encodeURIComponent($
 $("hwlink").href = "platform.html?platform=" + encodeURIComponent(plat);
 const DATA = await (await fetch(`data/${plat}/results.json`, opts)).json();
 const names = Object.keys(DATA).sort((a, b) => DATA[b].sysinfo.date.localeCompare(DATA[a].sysinfo.date));  // newest first
-for (const n of names) $("cur").add(new Option(n, n));
-$("base").add(new Option("— none —", ""));
-for (const n of names) $("base").add(new Option(n, n));
+const RT = n => /-rt-g[0-9a-f]{8}-/.test(n);  // deploy script tags PREEMPT_RT builds with -rt in localversion
+const inSeries = r => !$("series").value || ($("series").value === "rt") === RT(r);
+// a deep link naming runs picks "all" unless it says otherwise, so cross-series links keep working
+$("series").value = q.get("series") ?? (q.has("cur") || q.has("base") ? "" : "std");
+function fillRuns() {  // cur/base lists hold only the chosen series; default: newest vs previous
+  const list = names.filter(inSeries);
+  $("cur").replaceChildren(...list.map(n => new Option(n, n)));
+  $("base").replaceChildren(new Option("— none —", ""), ...list.map(n => new Option(n, n)));
+  $("base").value = list[1] ?? "";
+}
+fillRuns();
 if (q.get("cur")) $("cur").value = q.get("cur");
-$("base").value = q.get("base") ?? names[1] ?? "";  // default: newest vs previous
+if (q.has("base")) $("base").value = q.get("base");
 $("bench").add(new Option("— all —", ""));
 for (const b of [...new Set(names.flatMap(n => Object.keys(DATA[n].benchmarks)))].sort())
   $("bench").add(new Option(b, b));
 $("view").value = q.get("view") ?? "compare";
 $("last").value = q.get("last") ?? "";  // overview only: show just the newest N runs (empty = all)
-$("series").value = q.get("series") ?? "std";  // overview only: std | rt — RT and non-RT kernels are separate series
 
 function metrics(r) {
   const out = [];
@@ -217,7 +224,6 @@ function renderCompare() {
 // and one single-series line plot per metric.
 const SHORT = n => n.replace(/-g[0-9a-f]{8}-[0-9a-f]{8}/, "");  // 7.3.0-rc5-g26f0d7eb-100638f0_n5 → 7.3.0-rc5_n5
 const TAG = n => n.match(/_n\d+$/)?.[0].slice(1) ?? SHORT(n);   // x-axis label: n5
-const RT = n => /-rt-g[0-9a-f]{8}-/.test(n);  // deploy script tags PREEMPT_RT builds with -rt in localversion
 
 function plot(pts, better, bench) {  // pts: [{run, value?, std?}] in x order; gaps where a run lacks the metric
   const W = 240, H = 64, L = 40, R = 8, T = 6, B = 14;
@@ -253,7 +259,7 @@ function plot(pts, better, bench) {  // pts: [{run, value?, std?}] in x order; g
 function renderOverview() {
   $("sys").innerHTML = $("cfg").innerHTML = "";
   const n = +$("last").value;
-  const runs = [...names].reverse().filter(r => ($("series").value === "rt") === RT(r)).slice(n >= 2 ? -n : 0);
+  const runs = [...names].reverse().filter(inSeries).slice(n >= 2 ? -n : 0);
   const keys = new Map();  // "bench.metric" → [bench, metric, better], first-seen order
   for (const n of runs) for (const [b, m, v] of metrics(DATA[n]))
     if (shown(b, m)) keys.set(`${b}.${m}`, [b, m, v.better]);
@@ -280,10 +286,11 @@ function renderOverview() {
 function render() {
   const ov = $("view").value === "overview";
   $("cur").parentElement.hidden = $("base").parentElement.hidden = ov;
-  $("last").parentElement.hidden = $("series").parentElement.hidden = !ov;
+  $("last").parentElement.hidden = !ov;
   document.body.classList.toggle("ov", ov);
   ov ? renderOverview() : renderCompare();
 }
-$("view").onchange = $("cur").onchange = $("base").onchange = $("bench").onchange = $("last").oninput = $("series").onchange = render;
+$("view").onchange = $("cur").onchange = $("base").onchange = $("bench").onchange = $("last").oninput = render;
+$("series").onchange = () => { fillRuns(); render(); };
 render();
 </script>
