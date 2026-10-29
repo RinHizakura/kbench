@@ -7,5 +7,6 @@
     "L1d": "32K (cpus 0)",
     "L1i": "48K (cpus 0)",
     "L2": "1024K (cpus 0-3)"
-  }
+  },
+  "storage": "/dev/mmcblk0p2 ext4"
 }
