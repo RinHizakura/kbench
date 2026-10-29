@@ -1,7 +1,7 @@
 """rtla tracers (need root for tracefs):
-timerlat — a 1ms periodic timer on every CPU, latency at the IRQ handler, the woken
-kernel thread and the return to a user thread; p99/p99.9 over all samples, max over
-CPUs, mean of the per-CPU averages (CONFIG_TIMERLAT_TRACER).
+timerlat — a 1ms periodic timer on every CPU, latency until a user thread runs (irq +
+kernel thread + return to user); p99.9 over all samples and max over CPUs
+(CONFIG_TIMERLAT_TRACER).
 osnoise — a busy loop on every CPU, counting the time stolen by irqs, softirqs, NMIs
 and other threads (CONFIG_OSNOISE_TRACER)."""
 import os, re
@@ -43,17 +43,15 @@ def bench_timerlat():
                 hist[kind][int(f[0])] = hist[kind].get(int(f[0]), 0) + int(n)
         elif f[0] in ("over:", "avg:", "max:"):
             summ[f[0][:-1]] = [float(x) for x in f[1:]]
-    out = {}
-    for kind in dict.fromkeys(kinds):
-        idx = [i for i, k in enumerate(kinds) if k == kind]
-        h = hist[kind]
-        if over := int(sum(summ.get("over", [0] * len(cols))[i] for i in idx)):
-            h[ENTRIES] = h.get(ENTRIES, 0) + over  # past the last bucket: clamp to ENTRIES
-        out[f"{kind}.p99_us"] = (_pct(h, .99), "lower")
-        out[f"{kind}.p99.9_us"] = (_pct(h, .999), "lower")
-        out[f"{kind}.avg_us"] = (sum(summ["avg"][i] for i in idx) / len(idx), "lower")
-        out[f"{kind}.max_us"] = (max(summ["max"][i] for i in idx), "lower")
-    return out
+    # Only the user-thread latency is kept: it is what an application sees and already
+    # contains the irq and kernel-thread legs. irq.* was identical across kernels (board
+    # floor), avg barely moves, p99 is bimodal on non-RT; run rtla by hand to see the layers.
+    idx = [i for i, k in enumerate(kinds) if k == "user"]
+    h = hist["user"]
+    if over := int(sum(summ.get("over", [0] * len(cols))[i] for i in idx)):
+        h[ENTRIES] = h.get(ENTRIES, 0) + over  # past the last bucket: clamp to ENTRIES
+    return {"p99.9_us": (_pct(h, .999), "lower"),
+            "max_us": (max(summ["max"][i] for i in idx), "lower")}
 
 def bench_osnoise():
     """noise_us: time stolen from the busy loops, summed over CPUs for the whole run.
